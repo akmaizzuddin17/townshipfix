@@ -32,6 +32,7 @@ class AppTestCase(unittest.TestCase):
         config.DB_PATH = self.tmp / "test.db"
         db.reset_connection()
         clock.set_now(START)
+        config.PRIVACY_DETECTION = "off"  # deterministic matching; blurring is tested separately
         self.app = create_app()
         self.c = self.app.test_client()
         self.photos = photo_dir()

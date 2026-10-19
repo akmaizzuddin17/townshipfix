@@ -104,12 +104,20 @@ class TestDuplicates(AppTestCase):
         self.assertEqual(m["tickets"], 1)
         self.assertEqual(m["duplicates_merged_by_staff"], 1)
 
+    def test_analyze_without_location_still_suggests(self):
+        r = self.c.post("/api/analyze", json={"text": "tong sampah penuh", "lang": "ms"})
+        self.assertEqual(r.status_code, 200, r.json)
+        self.assertEqual(r.json["suggestion"]["category"], "waste_bin")
+        self.assertIsNone(r.json["match"]["distance_m"])
+
     def test_analyze_warns_before_submitting(self):
         self.report(LAMP, 1, "lampu rosak", "streetlight")
         u = self.upload(self.photos / LAMP / "before_2.jpg")
         a = self.c.post("/api/analyze", json={"text": "lampu jalan rosak", "lat": u["gps"]["lat"],
                                               "lng": u["gps"]["lng"], "photo_ref": u["ref"], "lang": "ms"}).json
         self.assertEqual(a["match"]["action"], "merge")
+        self.assertTrue(a["match"]["same_type"])
+        self.assertGreater(a["match"]["photo_match"], 75)
         self.assertEqual(a["category"], "streetlight")
         self.assertTrue(a["readback"].startswith("Saya faham"))
 

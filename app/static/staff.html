@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f5c45">
+  <title>TownshipFix staff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="staff">
+  <form class="gate" id="gate" hidden>
+    <span class="plate brand">TownshipFix</span>
+    <h1 style="margin-top:16px">Maintenance team sign-in</h1>
+    <div class="field">
+      <label for="pin">Staff PIN</label>
+      <input type="password" id="pin" inputmode="numeric" autocomplete="current-password">
+      <p class="hint">Demo PIN is 1234. Change it with TOWNSHIPFIX_STAFF_PIN.</p>
+    </div>
+    <p class="error" id="gate-error" role="alert"></p>
+    <button class="btn primary block">Sign in</button>
+  </form>
+
+  <div id="dash" hidden>
+    <header class="staff-top">
+      <span class="plate brand">TownshipFix</span>
+      <strong>Maintenance queue</strong>
+      <nav aria-label="Filter tickets">
+        <button type="button" data-filter="active" aria-pressed="true">Active</button>
+        <button type="button" data-filter="awaiting_confirmation" aria-pressed="false">Awaiting resident</button>
+        <button type="button" data-filter="closed" aria-pressed="false">Closed</button>
+        <button type="button" data-filter="all" aria-pressed="false">All</button>
+      </nav>
+    </header>
+    <section class="metrics" id="metrics" aria-label="Key measures"></section>
+    <div class="board">
+      <div class="side">
+        <section class="panel" aria-labelledby="queue-h">
+          <h2 class="panel-title" id="queue-h">Ranked by resident impact</h2>
+          <ul class="queue" id="queue"></ul>
+        </section>
+        <section class="panel map" aria-labelledby="map-h">
+          <h2 class="panel-title" id="map-h">Township map</h2>
+          <div id="map"></div>
+        </section>
+      </div>
+      <div class="side">
+        <section class="panel detail" id="detail" aria-live="polite">
+          <p class="empty">Select a ticket to see photos, why it is ranked there, and what to do next.</p>
+        </section>
+        <section class="panel" aria-labelledby="out-h">
+          <h2 class="panel-title" id="out-h">Messages sent (simulated SMS)</h2>
+          <ul class="log" id="outbox"></ul>
+        </section>
+        <section class="panel" style="padding:12px 14px">
+          <button type="button" class="btn danger" id="reset">Clear all demo data</button>
+          <span class="hint" id="reset-hint"></span>
+        </section>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/static/js/staff.js"></script>
+</body>
+</html>

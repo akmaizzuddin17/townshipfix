@@ -15,6 +15,8 @@ DB_PATH = DATA_DIR / "townshipfix.db"
 STAFF_PIN = os.environ.get("TOWNSHIPFIX_STAFF_PIN", "1234")
 LOCAL_TZ = os.environ.get("TOWNSHIPFIX_TZ", "Asia/Kuala_Lumpur")
 MAX_UPLOAD_MB = 15
+# Blur faces / number plates when OpenCV ships the detectors (set to "off" to disable).
+PRIVACY_DETECTION = os.environ.get("TOWNSHIPFIX_PRIVACY_DETECTION", "on")
 
 # Optional cloud vision. Leave ANTHROPIC_API_KEY unset to run fully offline.
 VISION_PROVIDER = os.environ.get("TOWNSHIPFIX_VISION", "auto")  # auto | keywords | claude

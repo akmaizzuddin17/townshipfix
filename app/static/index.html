@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f5c45">
+  <title>TownshipFix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <span class="plate brand" aria-label="TownshipFix">TownshipFix</span>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="ms" aria-pressed="false">BM</button>
+        <button type="button" data-lang="en" aria-pressed="true">EN</button>
+      </div>
+    </header>
+    <nav class="tabs" role="tablist">
+      <button role="tab" id="tab-report" aria-selected="true" data-tab="report" data-t="tabReport">Report</button>
+      <button role="tab" id="tab-mine" aria-selected="false" data-tab="mine" data-t="tabMine">My reports</button>
+      <button role="tab" id="tab-track" aria-selected="false" data-tab="track" data-t="tabTrack">Track</button>
+    </nav>
+
+    <!-- REPORT -->
+    <main class="pane" id="pane-report" role="tabpanel" aria-labelledby="tab-report">
+      <section id="step-form">
+        <h1 data-t="title">What needs fixing?</h1>
+        <p class="lede" data-t="lede">Take a photo or just tell us. We'll send it to the right team.</p>
+
+        <label class="photo-drop" id="photo-drop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span data-t="takePhoto">Take a photo</span>
+          <span class="hint" data-t="photoOptional">Optional, but it helps us find the spot</span>
+          <input type="file" id="photo" accept="image/*" capture="environment" aria-label="Take a photo">
+        </label>
+        <div class="photo-meta" id="photo-meta"></div>
+
+        <div class="field">
+          <label for="text" data-t="describe">Describe it</label>
+          <div class="row">
+            <textarea id="text" data-tp="describePh" placeholder="e.g. Lampu jalan rosak depan Blok C, gelap waktu malam"></textarea>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button type="button" class="btn mic" id="mic" aria-pressed="false">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+              <span data-t="speak">Speak instead</span>
+            </button>
+            <span class="hint" id="mic-status" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label" data-t="where">Where is it?</span>
+          <div class="location">
+            <span class="tag" id="loc-status" data-t="locNone">No location yet</span>
+            <button type="button" class="btn" id="use-gps" data-t="useGps">Use my location</button>
+          </div>
+          <label for="zone" class="hint" style="display:block;margin-top:10px" data-t="orArea">Or pick the area</label>
+          <select id="zone"><option value="" data-t="chooseArea">Choose an area</option></select>
+          <input type="text" id="landmark" style="margin-top:8px" data-tp="landmarkPh" placeholder="Nearby landmark (optional), e.g. Block C lift lobby">
+        </div>
+
+        <div class="field">
+          <span class="label" data-t="type">Type of problem</span>
+          <div class="chips" id="categories" role="group"></div>
+          <p class="hint" id="suggest-why" aria-live="polite"></p>
+        </div>
+
+        <div class="field">
+          <span class="label" data-t="who">Who does it affect?</span>
+          <div class="chips" id="flags" role="group"></div>
+        </div>
+
+        <details class="more" id="behalf-box">
+          <summary data-t="behalf">I'm reporting for someone else</summary>
+          <div class="field">
+            <label for="behalf" data-t="behalfName">Their name and unit</label>
+            <input type="text" id="behalf" data-tp="behalfPh" placeholder="e.g. Mak Cik Siti, C-3-2">
+          </div>
+        </details>
+        <div class="field">
+          <label for="contact" data-t="contact">Phone for updates (optional)</label>
+          <input type="tel" id="contact" inputmode="tel" autocomplete="tel" placeholder="012-345 6789">
+        </div>
+        <p class="error" id="form-error" role="alert"></p>
+        <div class="sticky-cta"><div class="inner">
+          <button type="button" class="btn primary block" id="check" data-t="check">Check my report</button>
+        </div></div>
+      </section>
+
+      <section id="step-confirm" hidden>
+        <h1 data-t="confirmTitle">Is this right?</h1>
+        <div class="sheet">
+          <p class="readback" id="readback"></p>
+          <button type="button" class="btn" id="speak-back" data-t="readAloud">Read it aloud</button>
+          <div id="confirm-notices"></div>
+          <img id="confirm-photo" alt="" style="border-radius:10px;margin-top:12px;max-height:220px;object-fit:cover;width:100%" hidden>
+        </div>
+        <p class="error" id="send-error" role="alert"></p>
+        <div class="row" style="margin-top:16px">
+          <button type="button" class="btn" id="edit" data-t="edit">Change something</button>
+          <button type="button" class="btn primary" id="send" style="flex:1" data-t="send">Send report</button>
+        </div>
+      </section>
+
+      <section id="step-done" class="done" hidden>
+        <p data-t="sentTitle">Report sent. Your reference:</p>
+        <span class="plate big" id="done-code">TF-0000</span>
+        <p id="done-msg" style="font-weight:700"></p>
+        <p id="done-meta" class="hint"></p>
+        <div class="row" style="justify-content:center;margin-top:16px;flex-wrap:wrap">
+          <button type="button" class="btn" id="go-mine" data-t="seeMine">See my reports</button>
+          <button type="button" class="btn primary" id="new-report" data-t="another">Report another</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- MINE -->
+    <main class="pane" id="pane-mine" role="tabpanel" aria-labelledby="tab-mine" hidden>
+      <h1 data-t="mineTitle">My reports</h1>
+      <p class="lede" data-t="mineLede">Saved on this phone. We'll ask you to check each repair.</p>
+      <div id="mine-list"></div>
+    </main>
+
+    <!-- TRACK -->
+    <main class="pane" id="pane-track" role="tabpanel" aria-labelledby="tab-track" hidden>
+      <h1 data-t="trackTitle">Track a report</h1>
+      <form id="track-form" class="row">
+        <label for="track-code" class="sr-only">Reference</label>
+        <input type="text" id="track-code" placeholder="TF-0001" autocapitalize="characters">
+        <button class="btn primary" data-t="trackBtn">Track</button>
+      </form>
+      <p class="error" id="track-error" role="alert"></p>
+      <div id="track-result"></div>
+    </main>
+  </div>
+  <script type="module" src="/static/js/resident.js"></script>
+</body>
+</html>

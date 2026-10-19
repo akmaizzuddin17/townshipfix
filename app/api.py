@@ -130,13 +130,17 @@ def analyze():
     a = tickets.analyse(text, lat, lng, photo["name"] if photo else None, pb, "image/jpeg",
                         data.get("category"), lang)
     m = a["match"]
+    sc = m.get("score")
     place = landmark or ("your pinned location" if lang == "en" else "lokasi anda")
     return jsonify(
         suggestion=a["suggestion"], category=a["category"], emergency=a["emergency"],
         flags_detected=a["flags_detected"],
         readback=tickets.text_nlp.readback(a["category"], place, lang, bool(a["emergency"])),
         match={"action": m["action"], "explanation": m["explanation"],
-               "ticket": tickets.public(m["ticket"]) if m["ticket"] and m["action"] != "new" else None},
+               "ticket": tickets.public(m["ticket"]) if m["ticket"] and m["action"] != "new" else None,
+               "distance_m": sc["distance_m"] if sc else None,
+               "same_type": bool(sc and sc["category"] == 1.0),
+               "photo_match": round(sc["image"]["score"] * 100) if sc and sc["image"] else None},
     )
 
 

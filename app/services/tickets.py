@@ -1,6 +1,7 @@
 """Ticket lifecycle: report -> (merge | new ticket) -> assign -> repair -> verify -> close."""
 import json
 import secrets
+from zoneinfo import ZoneInfo
 
 from .. import clock, config, db
 from . import classifier, dedup, notify, priority, text_nlp, verification
@@ -133,7 +134,7 @@ def create_report(*, text, lat, lng, location_source, landmark, category, flags,
     if merged:
         notify.residents(t, "merged", n=n)
     else:
-        due = clock.parse(p["sla_due_at"]).strftime("%d %b %H:%M UTC")
+        due = clock.parse(p["sla_due_at"]).astimezone(ZoneInfo(config.LOCAL_TZ)).strftime("%d %b, %I:%M %p")
         notify.residents(t, "received", due=due)
         notify.team(t, f"New {t['priority_band']} job {t['code']}: {t['title']} at {landmark or 'map pin'}")
     return {"ticket": public(t), "report_token": token, "merged": merged, "explanation": explanation,

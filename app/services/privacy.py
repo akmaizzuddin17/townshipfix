@@ -35,6 +35,9 @@ def detectors_available():
 
 
 def detect_sensitive(img_rgb: np.ndarray):
+    from .. import config
+    if config.PRIVACY_DETECTION == "off":
+        return []
     boxes = []
     gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
     for name, c in _load_cascades().items():
