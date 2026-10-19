@@ -27,9 +27,8 @@ def get(code):
     return t
 
 
-def _next_code():
-    n = db.q1("SELECT COUNT(*) AS n FROM tickets")["n"] + 1
-    return f"TF-{n:04d}"
+def _code_for(ticket_id):
+    return f"TF-{ticket_id:04d}"
 
 
 def refresh_priority(t):
@@ -108,9 +107,10 @@ def create_report(*, text, lat, lng, location_source, landmark, category, flags,
             """INSERT INTO tickets (code, category, team, status, lat, lng, landmark, title, flags, urgent,
                urgent_reasons, possible_dup_of, created_at, updated_at)
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-            (_next_code(), cat, team, "open", lat, lng, landmark, title, json.dumps(all_flags),
+            ("pending-" + secrets.token_hex(6), cat, team, "open", lat, lng, landmark, title, json.dumps(all_flags),
              int(bool(urgent_reasons)), json.dumps(urgent_reasons),
              match["ticket"]["code"] if match["action"] == "suggest" else None, now, now))
+        db.ex("UPDATE tickets SET code=? WHERE id=?", (_code_for(tid), tid))  # code follows the row id: no clashes
         t = db.q1("SELECT * FROM tickets WHERE id=?", (tid,))
         log(tid, "system", "created", category=cat, team=team)
         if urgent_reasons:

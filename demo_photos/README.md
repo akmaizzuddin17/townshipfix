@@ -56,7 +56,7 @@ images, but **real photos from a real township are what will convince the judges
 }
 ```
 
-`category` is one of: `streetlight`, `road_damage`, `walkway`, `accessibility`, `drain`,
+`category` is one of: `electrical`, `streetlight`, `road_damage`, `walkway`, `accessibility`, `drain`,
 `water_leak`, `waste_bin`, `tree`, `playground`, `vandalism`, `other`.
 Get `lat`/`lng` by long-pressing the spot in Google Maps.
 

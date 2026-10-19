@@ -197,6 +197,21 @@ class TestSafetyAndGuards(AppTestCase):
         out = self.c.get("/api/staff/outbox", headers=PIN).json["items"]
         self.assertTrue(any(o["channel"] == "security" for o in out))
 
+    def test_parallel_reports_get_unique_codes(self):
+        from concurrent.futures import ThreadPoolExecutor
+        zones = ["Z1", "Z2", "Z3", "Z4", "Z5"] * 3
+        texts = ["lampu rosak", "tong sampah penuh", "pothole", "longkang tersumbat", "pokok tumbang"]
+
+        def go(i):
+            with self.app.test_client() as c:
+                return c.post("/api/reports", json={"text": texts[i % 5] + f" {i}", "zone": zones[i]}).json
+        with ThreadPoolExecutor(6) as ex:
+            res = list(ex.map(go, range(15)))
+        codes = [r["ticket"]["code"] for r in res]
+        self.assertTrue(all(c.startswith("TF-") for c in codes))
+        rows = self.c.get("/api/staff/tickets?status=all", headers=PIN).json["items"]
+        self.assertEqual(len({r["code"] for r in rows}), len(rows))
+
     def test_staff_endpoints_need_pin(self):
         self.assertEqual(self.c.get("/api/staff/tickets").status_code, 401)
         self.assertEqual(self.c.get("/api/staff/tickets", headers={"X-Staff-Pin": "0000"}).status_code, 401)

@@ -26,6 +26,7 @@ CLAUDE_MODEL = os.environ.get("TOWNSHIPFIX_CLAUDE_MODEL", "claude-haiku-5-5")
 # severity: 1 (cosmetic) .. 5 (dangerous). group: related categories that a
 # resident might confuse, so duplicates can still merge across them.
 CATEGORIES = {
+    "electrical":    {"en": "Exposed wiring / electrical", "ms": "Wayar terdedah / elektrik",  "severity": 5, "team": "electrical", "group": "lighting"},
     "streetlight":   {"en": "Broken streetlight",        "ms": "Lampu jalan rosak",          "severity": 3, "team": "electrical", "group": "lighting"},
     "road_damage":   {"en": "Pothole / road damage",     "ms": "Lubang / jalan rosak",       "severity": 3, "team": "civil",      "group": "surface"},
     "walkway":       {"en": "Damaged walkway",           "ms": "Laluan pejalan kaki rosak",  "severity": 3, "team": "civil",      "group": "surface"},

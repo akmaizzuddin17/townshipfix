@@ -134,9 +134,9 @@ function checksList(v) {
 function actionArea(t) {
   const box = el("div", {});
   const status = el("p", { class: "hint", "aria-live": "polite" });
-  const run = async (fn, okMsg) => {
+  const run = async (fn, okMsg, next) => {
     status.className = "hint"; status.textContent = "Working…";
-    try { const r = await fn(); status.textContent = okMsg || ""; await refresh(); await select(t.code); return r; }
+    try { const r = await fn(); status.textContent = okMsg || ""; await refresh(); await select(next || t.code); return r; }
     catch (e) { status.className = "error"; status.textContent = e.message; }
   };
 
@@ -165,7 +165,7 @@ function actionArea(t) {
   if (t.possible_dup_of && !["closed", "merged"].includes(t.status)) {
     box.append(el("div", { class: "notice" }, `Possible duplicate of ${t.possible_dup_of}. `,
       el("button", { type: "button", class: "btn", onclick: () => run(() =>
-        call(`/api/staff/tickets/${t.code}/merge`, { method: "POST", json: { into: t.possible_dup_of } }).then(() => { S.selected = t.possible_dup_of; })) },
+        call(`/api/staff/tickets/${t.code}/merge`, { method: "POST", json: { into: t.possible_dup_of } }), "", t.possible_dup_of) },
       `Merge into ${t.possible_dup_of}`)));
   }
   if (!["closed", "merged"].includes(t.status)) {

@@ -22,6 +22,10 @@ class TestUnderstanding(unittest.TestCase):
     def test_manglish_mix(self):
         self.assertEqual(self.cat("ramp OKU kena block dengan motor, kerusi roda tak boleh lalu"), "accessibility")
 
+    def test_electrical_hazard(self):
+        self.assertEqual(self.cat("exposed wire sparking at the playground"), "electrical")
+        self.assertEqual(self.cat("wayar terdedah dekat tiang"), "electrical")
+
     def test_unknown_and_empty(self):
         self.assertEqual(self.cat("something strange here"), "other")
         self.assertEqual(text_nlp.suggest_category("")[0], None)

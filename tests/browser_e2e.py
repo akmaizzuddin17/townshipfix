@@ -116,7 +116,7 @@ def main():
             sp.click("#gate button")
             expect(sp.locator("#queue li")).to_have_count(3)
             first = sp.locator("#queue li .title").first.inner_text()
-            assert "Other problem" in first or "TF-0003" in first, f"emergency should be first, got {first}"
+            assert "TF-0003 Exposed wiring" in first, f"emergency should be first, got {first}"
             sp.locator("#queue li button", has_text="TF-0001").click()
             expect(sp.locator("#detail h1")).to_have_text("Broken streetlight")
             expect(sp.locator("#detail .photos figure")).to_have_count(3)

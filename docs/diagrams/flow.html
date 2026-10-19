@@ -1,0 +1,81 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>TownshipFix flow</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .c0{left:16px}.c1{left:236px}.c2{left:456px}.c3{left:676px}.c4{left:896px}.c5{left:1116px}.c6{left:1336px}
+  .node{width:180px}
+</style></head>
+<body>
+<div id="stage">
+  <svg id="wires"><defs></defs></svg>
+  <header class="title">
+    <span class="plate">TownshipFix</span>
+    <div><h1>From resident report to verified repair</h1>
+      <p>Who does what, in order. Yellow-edged boxes are decisions the system makes automatically.</p></div>
+  </header>
+  <div class="lanes">
+    <div class="lane" style="min-height:200px">
+      <div class="lane-name">Resident</div>
+      <div class="lane-body">
+        <div class="node c0" style="top:28px" id="n-spot"><b>Spots a problem</b>Takes a photo and/or speaks, in Malay or English</div>
+        <div class="node c1" style="top:28px" id="n-read"><b>Checks the read-back</b>"Is this right?" Edit, or send</div>
+        <div class="node c3" style="top:28px" id="n-ref"><b>Gets a reference</b>TF-0007 and a fix-by time; told if neighbours already reported it</div>
+        <div class="node c5" style="top:28px" id="n-check"><b>Checks the repair</b>Before and after photos side by side</div>
+        <div class="node decision c6" style="top:28px" id="n-fixed"><b>Fixed?</b>Tap "Yes, it's fixed" or "No, still broken"</div>
+      </div>
+    </div>
+    <div class="lane" style="min-height:280px">
+      <div class="lane-name">TownshipFix AI</div>
+      <div class="lane-body">
+        <div class="node c0" style="top:40px" id="a-priv"><b>Privacy + location</b>Removes photo metadata, blurs faces and plates; reads GPS from photo or phone, or the picked area</div>
+        <div class="node c1" style="top:40px" id="a-und"><b>Understand</b>Problem type from words (and photo, optional); danger words</div>
+        <div class="node alert c1" style="top:186px" id="a-alert"><b>Alert security</b>P0 emergency, 2 hour target</div>
+        <div class="node decision c2" style="top:96px" id="a-dup"><b>Same problem open nearby?</b>Within 80 m; type and photo match</div>
+        <div class="node c3" style="top:40px" id="a-merge"><b>Add to that ticket</b>Reporter count and priority go up</div>
+        <div class="node c3" style="top:170px" id="a-new"><b>Create a ticket</b>Flagged "possible duplicate" if borderline</div>
+        <div class="node c4" style="top:96px" id="a-pri"><b>Rank + route</b>Impact score /100 with reasons; to the right team</div>
+        <div class="node decision c5" style="top:96px" id="a-ver"><b>Repair photo passes all 5 checks?</b>Same place, visible change, not reused, time, distance</div>
+        <div class="node end c6" style="top:110px" id="a-close"><b>Closed</b>Confirmed, or 72 h after a verified fix with no objection</div>
+      </div>
+    </div>
+    <div class="lane" style="min-height:210px">
+      <div class="lane-name">Maintenance team</div>
+      <div class="lane-body">
+        <div class="node c4" style="top:56px" id="t-assign"><b>Assign crew</b>Highest impact first; due time shown</div>
+        <div class="node c5" style="top:56px" id="t-fix"><b>Repair + after photo</b>Photo from where residents stood</div>
+      </div>
+    </div>
+  </div>
+  <div class="legend" style="margin-top:14px">
+    <span><span class="k"></span>next step</span>
+    <span style="color:#b3261e"><span class="k" style="border-color:#b3261e"></span>goes back for more work, or emergency</span>
+  </div>
+</div>
+<script src="diagram.js"></script>
+<script>
+  diagramReady();
+  const S = document.getElementById("stage").getBoundingClientRect();
+  const R = (id) => { const r = document.getElementById(id).getBoundingClientRect(); return { l: r.left - S.left, r: r.right - S.left, t: r.top - S.top, b: r.bottom - S.top, cx: (r.left + r.right) / 2 - S.left, cy: (r.top + r.bottom) / 2 - S.top }; };
+  const RED = "#b3261e";
+  connect("n-spot", "a-priv");
+  connect("a-priv", "a-und", { from: "right", to: "left" });
+  connect("a-und", "n-read", { from: "top", to: "bottom", label: "read-back", at: 0.5 });
+  connect("n-read", "a-dup", { from: "right", to: "top", label: "send", at: 0.2 });
+  connect("a-und", "a-alert", { color: RED, label: "danger words", at: 0.55, dy: 4 });
+  connect("a-dup", "a-merge", { from: "right", to: "left", label: "yes", at: 0.35 });
+  connect("a-dup", "a-new", { from: "bottom", to: "left", label: "no", at: 0.62 });
+  connect("a-merge", "a-pri", { from: "right", to: "left", midX: R("a-pri").l - 16 });
+  connect("a-new", "a-pri", { from: "right", to: "left", midX: R("a-pri").l - 16 });
+  connect("a-pri", "n-ref", { from: "top", to: "right", label: "reference + fix-by time", at: 0.62, dy: -8 });
+  connect("a-pri", "t-assign", { label: "job", at: 0.5 });
+  connect("t-assign", "t-fix", { from: "right", to: "left" });
+  connect("t-fix", "a-ver", { from: "top", to: "bottom", label: "submit", at: 0.5 });
+  connect("a-ver", "t-fix", { from: "right", to: "right", color: RED, via: [[R("a-ver").r + 18, null], [R("a-ver").r + 18, R("t-fix").cy]], label: "no: stays open", at: 0.62, anchor: "start", dx: 6, dy: 4 });
+  connect("a-ver", "n-check", { from: "top", to: "bottom", label: "yes", at: 0.5 });
+  connect("n-check", "n-fixed", { from: "right", to: "left" });
+  connect("n-fixed", "a-close", { label: "yes", at: 0.5 });
+  connect("n-fixed", "t-fix", { from: "right", to: "bottom", color: RED,
+    via: [[R("n-fixed").r + 22, null], [R("n-fixed").r + 22, R("t-fix").b + 34], [R("t-fix").cx, R("t-fix").b + 34]],
+    label: "no: reopened", at: 0.42, anchor: "end", dx: -8 });
+</script>
+</body></html>

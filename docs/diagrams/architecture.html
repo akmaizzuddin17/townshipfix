@@ -1,0 +1,111 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>TownshipFix architecture</title>
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="stage">
+  <svg id="wires"><defs></defs></svg>
+  <header class="title">
+    <span class="plate">TownshipFix</span>
+    <div><h1>System architecture</h1>
+      <p>Resident photo or voice report → one ticket per real problem → ranked by impact → repair proven by photo → resident confirms</p></div>
+  </header>
+
+  <div class="band" style="justify-content:space-between;padding:0 120px">
+    <span class="band-label">People</span>
+    <div class="box actor" id="p-res"><h3>Residents</h3><p>incl. family reporting for an elderly neighbour</p></div>
+    <div class="box actor" id="p-crew"><h3>Maintenance crews</h3><p>electrical, civil, drainage, cleansing, landscape</p></div>
+    <div class="box actor" id="p-sup"><h3>Supervisor</h3><p>override with written reason</p></div>
+    <div class="box actor danger" id="p-sec"><h3>Security control room</h3><p>emergencies only</p></div>
+  </div>
+
+  <div class="band" style="gap:60px">
+    <span class="band-label">Apps (phone browser, nothing to install)</span>
+    <div class="box app" id="app-res" style="flex:1">
+      <h3>Resident app</h3>
+      <p>Camera photo; speak in Malay or English; area picker when there is no GPS; read-back "Is this right?" before sending; warns if already reported; track by code; confirm or reopen the repair</p>
+      <span class="tech">HTML + JavaScript, no build step</span>
+    </div>
+    <div class="box app" id="app-staff" style="flex:1">
+      <h3>Staff dashboard</h3>
+      <p>Queue ranked by resident impact, with reasons; township map; assign crew; upload after photo and see each check; merge possible duplicates; audit trail; live measures</p>
+      <span class="tech">HTML + JavaScript, staff PIN</span>
+    </div>
+  </div>
+
+  <div class="band" style="justify-content:center">
+    <div class="box api" id="api" style="width:760px">
+      <h3>TownshipFix API</h3>
+      <p>/api/photos, /api/analyze, /api/reports, /api/tickets/&lt;code&gt;, /api/staff/…</p>
+      <span class="tech" style="background:#fff">Python, Flask</span>
+    </div>
+  </div>
+
+  <div class="band" style="gap:22px;align-items:flex-start">
+    <div style="flex:1;display:grid;gap:30px">
+      <div class="panel" id="intake">
+        <span class="panel-label">Intake: from report to ranked ticket (in order)</span>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:26px">
+          <div class="box step" id="s1"><h3><span class="n">1</span>Privacy guard</h3><p>Strips photo metadata; blurs faces and number plates before anything is saved</p></div>
+          <div class="box step" id="s2"><h3><span class="n">2</span>Locate</h3><p>GPS inside the photo, else phone GPS, else the area the resident picked</p></div>
+          <div class="box step ai" id="s3"><h3><span class="n">3</span>Understand</h3><p>Malay + English keywords → problem type; danger words (live wire, bau gas…) → emergency</p></div>
+          <div class="box step ai" id="s4"><h3><span class="n">4</span>Duplicate check</h3><p>Open tickets within 80 m: distance + type + same-scene photo match (SIFT + RANSAC) → merge, suggest or new</p></div>
+          <div class="box step ai" id="s5"><h3><span class="n">5</span>Impact priority</h3><p>Severity + who is affected (wheelchair, school, elderly, night) + reporters + waiting time = score /100 with reasons</p></div>
+          <div class="box step" id="s6"><h3><span class="n">6</span>Route + notify</h3><p>Problem type → team and fix-by time; P0 emergency → security, 2 h target</p></div>
+        </div>
+      </div>
+      <div class="panel" id="repair" style="padding-bottom:40px">
+        <span class="panel-label">Repair: from job to verified fix (in order)</span>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:26px">
+          <div class="box step" id="r1"><h3><span class="n">A</span>Assign + start</h3><p>Crew named; every resident on the ticket is told</p></div>
+          <div class="box step" id="r2"><h3><span class="n">B</span>After photo</h3><p>Taken on site by the crew from where residents stood</p></div>
+          <div class="box step ai" id="r3"><h3><span class="n">C</span>Verify evidence</h3><p>Same place? visible change? not a reused photo? taken after the report? within 50 m? Any fail → stays open</p></div>
+          <div class="box step" id="r4"><h3><span class="n">D</span>Resident check</h3><p>Sees before and after side by side; confirms, or reopens with a reason</p></div>
+          <div class="box step" id="r5"><h3><span class="n">E</span>Close</h3><p>Confirmed, or auto-closed 72 h after a verified fix; override needs a written reason</p></div>
+        </div>
+      </div>
+    </div>
+    <div style="width:250px;display:grid;gap:26px;padding-top:10px">
+      <div class="box external" id="x-claude"><h3>Claude vision API</h3><p>Optional second opinion on the photo in step 3. Off unless an API key is set; falls back to keywords on any error.</p></div>
+      <div class="box external" id="x-sms"><h3>SMS / WhatsApp gateway</h3><p>Next step. Today messages go to an outbox shown on the dashboard.</p></div>
+    </div>
+  </div>
+
+  <div class="band" style="gap:22px;margin-bottom:18px;padding-right:272px">
+    <span class="band-label">Data</span>
+    <div class="box store" id="d-db" style="flex:1"><h3>SQLite database</h3><p>Tickets, resident reports, audit trail of every action</p></div>
+    <div class="box store" id="d-photos" style="flex:1"><h3>Photo store</h3><p>Privacy-safe JPEGs + visual fingerprints for matching</p></div>
+    <div class="box store" id="d-out" style="flex:1"><h3>Message outbox</h3><p>Residents (in their language), crews, security</p></div>
+    <div class="box store" id="d-metrics" style="flex:1"><h3>Measures</h3><p>Time to report, duplicates grouped, time to fix, verified closures, fakes rejected</p></div>
+  </div>
+
+  <div class="legend">
+    <span><span class="k"></span>data flow</span>
+    <span><span class="k d"></span>optional or future</span>
+    <span><span class="ai-tag">AI</span>runs offline with OpenCV; no model download</span>
+  </div>
+</div>
+<script src="diagram.js"></script>
+<script>
+  diagramReady();
+  const S = document.getElementById("stage").getBoundingClientRect();
+  const R = (id) => { const r = document.getElementById(id).getBoundingClientRect(); return { l: r.left - S.left, r: r.right - S.left, t: r.top - S.top, b: r.bottom - S.top, cx: (r.left + r.right) / 2 - S.left, cy: (r.top + r.bottom) / 2 - S.top }; };
+  const RED = "#b3261e", GREY = "#5b6b65";
+  const gutterL = 24, gutterR = S.width - 20;
+  connect("p-res", "app-res", { label: "photo, voice, text" });
+  connect("p-crew", "app-staff");
+  connect("p-sup", "app-staff");
+  connect("app-res", "api", { both: true, from: "bottom", to: "top", label: "JSON over HTTPS", at: 0.18, midY: (R("app-res").b + R("api").t) / 2 });
+  connect("app-staff", "api", { both: true, from: "bottom", to: "right" });
+  connect("api", "s1", { from: "left", to: "left", via: [[gutterL, null], [gutterL, R("s1").cy]], label: "new report", at: 0.12 });
+  for (let i = 1; i < 6; i++) connect(`s${i}`, `s${i + 1}`, { from: "right", to: "left" });
+  for (let i = 1; i < 5; i++) connect(`r${i}`, `r${i + 1}`, { from: "right", to: "left" });
+  const gapY = (R("intake").b + R("repair").t) / 2;
+  connect("s6", "r1", { from: "bottom", to: "left", via: [[null, gapY], [gutterL, null], [gutterL, R("r1").cy]], label: "job queued", at: 0.2 });
+  connect("intake", "x-claude", { from: "right", to: "left", dashed: true, color: GREY });
+  connect("s6", "p-sec", { from: "top", to: "right", color: RED, via: [[null, R("intake").t - 16], [gutterR, null], [gutterR, R("p-sec").cy]], label: "emergency alert", at: 0.3 });
+  const below = R("r4").b + 14;
+  connect("r4", "r2", { from: "bottom", to: "bottom", color: RED, via: [[null, below], [R("r2").cx, null]], label: "reopened by resident", at: 0.5, dy: 16 });
+  connect("repair", "d-db", { from: "bottom", to: "top" });
+  connect("d-out", "x-sms", { from: "top", to: "bottom", dashed: true, color: GREY, via: [[null, R("d-out").t - 18], [R("x-sms").cx, null]] });
+</script>
+</body></html>

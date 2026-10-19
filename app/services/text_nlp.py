@@ -9,6 +9,11 @@ from .. import config
 
 # Phrases are matched on word boundaries against lower-cased text.
 CATEGORY_KEYWORDS = {
+    "electrical": [
+        "wire", "wires", "wiring", "exposed wire", "live wire", "cable", "sparking", "sparks", "electric",
+        "electrical", "electric box", "wayar", "wayar terdedah", "kabel", "percikan api", "renjatan",
+        "kotak elektrik", "suis",
+    ],
     "streetlight": [
         "streetlight", "street light", "lamp post", "lamppost", "lamp", "light", "lights",
         "bulb", "lampu", "lampu jalan", "tiang lampu", "mentol", "padam", "tak menyala",

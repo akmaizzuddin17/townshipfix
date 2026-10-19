@@ -169,7 +169,7 @@ async function onPhoto(file) {
   const drop = $("photo-drop");
   const url = URL.createObjectURL(file);
   drop.classList.add("has-photo");
-  drop.querySelectorAll("svg, span").forEach((n) => (n.hidden = true));
+  drop.querySelectorAll("svg, span").forEach((n) => n.toggleAttribute("hidden", true)); // works for SVG too
   drop.querySelector("img")?.remove();
   drop.prepend(el("img", { src: url, alt: t("takePhoto") }));
   const meta = $("photo-meta");
@@ -341,7 +341,7 @@ function resetForm() {
   const drop = $("photo-drop");
   drop.classList.remove("has-photo");
   drop.querySelector("img")?.remove();
-  drop.querySelectorAll("svg, span").forEach((n) => (n.hidden = false));
+  drop.querySelectorAll("svg, span").forEach((n) => n.toggleAttribute("hidden", false));
   fill($("photo-meta"));
   $("suggest-why").textContent = "";
   $("form-error").textContent = "";
