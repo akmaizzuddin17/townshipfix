@@ -35,7 +35,7 @@ def main():
     data = Path(tempfile.mkdtemp(prefix="tf_e2e_"))
     photos = synthetic_photos.write_demo(data / "photos")
     port = free_port()
-    env = {**os.environ, "TOWNSHIPFIX_DATA": str(data / "app")}
+    env = {**os.environ, "TOWNSHIPFIX_DATA": str(data / "app"), "TOWNSHIPFIX_PRIVACY_DETECTION": "off"}
     server = subprocess.Popen([sys.executable, "run.py", "--port", str(port)], cwd=ROOT, env=env,
                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     base = f"http://127.0.0.1:{port}"

@@ -1,0 +1,8 @@
+{
+  "category": "streetlight",
+  "lat": 3.07210,
+  "lng": 101.51820,
+  "landmark": "Example: Jalan 2, near Block C",
+  "texts": ["Lampu jalan rosak, gelap waktu malam", "Streetlight not working", "lamp post broken"],
+  "note": "Replace this folder with your own: put before_1.jpg, before_2.jpg, before_3.jpg and after.jpg here."
+}

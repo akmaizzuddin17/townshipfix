@@ -1,0 +1,31 @@
+name: Check photos and tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: python -m unittest discover -s tests -t . -v
+      - name: Check uploaded photos
+        run: |
+          python scripts/evaluate_images.py demo_photos --report photo_report.md || true
+          echo "## Photo AI check on demo_photos/" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f photo_report.md ]; then cat photo_report.md >> "$GITHUB_STEP_SUMMARY"; else echo "No photo folders yet. See demo_photos/README.md" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Check synthetic photos (baseline)
+        run: |
+          python scripts/synthetic_photos.py
+          python scripts/evaluate_images.py demo_photos/_synthetic --report synthetic_report.md
+          echo "## Baseline on generated test scenes" >> "$GITHUB_STEP_SUMMARY"
+          cat synthetic_report.md >> "$GITHUB_STEP_SUMMARY"
