@@ -278,10 +278,7 @@ def staff_outbox():
 def staff_reset():
     """Wipe all demo data (tickets, reports, photos)."""
     _staff()
-    db.reset_connection()
-    for p in (config.DB_PATH,):
-        if p.exists():
-            p.unlink()
+    db.wipe()
     for d in (config.UPLOAD_DIR, config.FEATURE_DIR):
         shutil.rmtree(d, ignore_errors=True)
     db_photo_privacy.clear()

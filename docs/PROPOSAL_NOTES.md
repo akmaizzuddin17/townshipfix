@@ -41,7 +41,7 @@ A phone web app plus a staff dashboard:
 | Innovative | Beyond a reporting form: impact-based ranking with reasons, photo-verified closure, Malay/English voice with read-back |
 | Feasible | Runs on one laptop with Python; phones need only a browser; offline AI (no paid service needed) |
 | Scalable | Categories, teams, zones and thresholds are in one config file; next step is a township ID per ticket |
-| Evidence based | Working prototype, 53 automated tests, photo evaluation script, [your user test results] |
+| Evidence based | Working prototype, 55 automated tests, photo evaluation script, [your user test results] |
 
 ## User test plan (before 23 Oct)
 

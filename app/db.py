@@ -2,10 +2,12 @@
 import json
 import sqlite3
 import threading
+from contextlib import contextmanager
 
 from . import config
 
 _local = threading.local()
+_generation = 0  # bumped by wipe(); every thread then reconnects to the fresh file
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS tickets (
@@ -79,14 +81,27 @@ CREATE INDEX IF NOT EXISTS idx_events_ticket ON events(ticket_id);
 
 def connect():
     conn = getattr(_local, "conn", None)
-    if conn is None or getattr(_local, "path", None) != str(config.DB_PATH):
+    if conn is None or getattr(_local, "path", None) != str(config.DB_PATH) or getattr(_local, "gen", -1) != _generation:
         config.DATA_DIR.mkdir(parents=True, exist_ok=True)
-        conn = sqlite3.connect(str(config.DB_PATH), check_same_thread=False)
+        # autocommit mode; multi-step writes use transaction() below
+        conn = sqlite3.connect(str(config.DB_PATH), check_same_thread=False, timeout=30, isolation_level=None)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(SCHEMA)
-        _local.conn, _local.path = conn, str(config.DB_PATH)
+        _local.conn, _local.path, _local.gen = conn, str(config.DB_PATH), _generation
     return conn
+
+
+def wipe():
+    """Delete the database (demo reset). Other threads reconnect on their next query."""
+    global _generation
+    reset_connection()
+    _generation += 1
+    for suffix in ("", "-wal", "-shm"):
+        p = config.DB_PATH.with_name(config.DB_PATH.name + suffix)
+        if p.exists():
+            p.unlink()
 
 
 def reset_connection():
@@ -118,7 +133,22 @@ def q1(sql, args=()):
 
 
 def ex(sql, args=()):
+    return connect().execute(sql, args).lastrowid
+
+
+@contextmanager
+def transaction():
+    """All-or-nothing writes that other requests never see half-done.
+    BEGIN IMMEDIATE also makes concurrent report submissions queue up, so two
+    residents reporting the same problem at the same moment still get one ticket."""
     conn = connect()
-    cur = conn.execute(sql, args)
-    conn.commit()
-    return cur.lastrowid
+    if conn.in_transaction:  # already inside one: just join it
+        yield conn
+        return
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        yield conn
+        conn.execute("COMMIT")
+    except BaseException:
+        conn.execute("ROLLBACK")
+        raise

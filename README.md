@@ -84,7 +84,7 @@ it reports accuracy and suggests new thresholds for `app/config.py`.
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -t . -v      # 53 tests: language, vision, privacy, priority, full flows
+python -m unittest discover -s tests -t . -v      # 55 tests: language, vision, privacy, priority, full flows
 python tests/browser_e2e.py                        # clicks through both apps in a headless browser (needs playwright)
 ```
 

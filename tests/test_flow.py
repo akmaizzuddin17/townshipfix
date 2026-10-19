@@ -208,9 +208,27 @@ class TestSafetyAndGuards(AppTestCase):
         with ThreadPoolExecutor(6) as ex:
             res = list(ex.map(go, range(15)))
         codes = [r["ticket"]["code"] for r in res]
-        self.assertTrue(all(c.startswith("TF-") for c in codes))
+        self.assertTrue(all(c.startswith("TF-") for c in codes), codes)
+
+    def test_same_problem_reported_at_the_same_moment_gives_one_ticket(self):
+        from concurrent.futures import ThreadPoolExecutor
+
+        def go(i):
+            with self.app.test_client() as c:
+                return c.post("/api/reports", json={"text": "longkang tersumbat depan surau", "zone": "Z5"}).json
+        with ThreadPoolExecutor(5) as ex:
+            res = list(ex.map(go, range(5)))
+        self.assertEqual(len({r["ticket"]["code"] for r in res}), 1, res)
         rows = self.c.get("/api/staff/tickets?status=all", headers=PIN).json["items"]
         self.assertEqual(len({r["code"] for r in rows}), len(rows))
+
+    def test_demo_reset_clears_everything(self):
+        self.report(LAMP, 1, "lampu rosak", "streetlight")
+        self.assertEqual(self.c.post("/api/staff/reset", headers=PIN).status_code, 200)
+        self.assertEqual(self.c.get("/api/staff/metrics", headers=PIN).json["reports"], 0)
+        again = self.report(LAMP, 2, "lampu rosak", "streetlight")
+        self.assertEqual(again["ticket"]["code"], "TF-0001")
+        self.assertFalse(again["merged"])
 
     def test_staff_endpoints_need_pin(self):
         self.assertEqual(self.c.get("/api/staff/tickets").status_code, 401)

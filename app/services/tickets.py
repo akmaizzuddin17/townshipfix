@@ -71,7 +71,12 @@ def analyse(text, lat, lng, photo_name=None, photo_bytes=None, media_type="image
             "match": match}
 
 
-def create_report(*, text, lat, lng, location_source, landmark, category, flags, lang,
+def create_report(**kw):
+    with db.transaction():
+        return _create_report(**kw)
+
+
+def _create_report(*, text, lat, lng, location_source, landmark, category, flags, lang,
                   photo=None, photo_bytes=None, media_type="image/jpeg", on_behalf_of=None,
                   contact=None, client_duration_ms=None):
     if lat is None or lng is None:
