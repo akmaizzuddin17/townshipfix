@@ -3,3 +3,4 @@ __pycache__/
 data/
 demo_photos/_synthetic/
 .env
+.venv/

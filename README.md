@@ -27,6 +27,32 @@ python run.py
 - Resident app: http://localhost:8000
 - Staff dashboard: http://localhost:8000/staff (PIN `1234`)
 
+### Dashboard map
+
+The staff dashboard uses locally bundled Leaflet 1.9.4 with OpenStreetMap street tiles.
+Priority-labelled pins open ticket summaries and resident photos; **View ticket & photos**
+opens the full details. Scroll with two fingers on a trackpad, use a mouse wheel, or pinch with two
+fingers on a phone to zoom. Drag the map to move, or use **Show all tickets** to return to the queue's locations.
+Filtering updates the pins; background refreshes preserve the current map view.
+
+Use **Streets / Satellite** above the map to switch between OpenStreetMap streets and
+[Esri World Imagery](https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9).
+Switching preserves the map position, zoom, selected ticket and photos. The choice is remembered
+for the current browser tab. Satellite imagery is not live and capture dates vary by location.
+Leaflet remains open source; Esri imagery is a separately licensed hosted service. Review the
+provider's published terms before deployment; tiles are fetched only for interactive viewing.
+Set `TOWNSHIPFIX_MAP_SATELLITE_TILE_URL` and `TOWNSHIPFIX_MAP_SATELLITE_ATTRIBUTION`
+to use a different licensed imagery provider. Attribution updates with the selected layer.
+
+Street and satellite tiles need an internet connection. If they cannot load, ticket pins and the queue still work.
+Sample township zones and demo report coordinates are illustrative.
+For a different tile provider, set `TOWNSHIPFIX_MAP_TILE_URL` and
+`TOWNSHIPFIX_MAP_ATTRIBUTION` (trusted attribution HTML) before starting the server.
+Keep provider attribution visible. The default community service is for normal interactive viewing;
+follow its [tile usage policy](https://operations.osmfoundation.org/policies/tiles/), including no bulk
+downloads or offline prefetching. For larger deployments, choose a suitable provider or self-host tiles.
+The staff page sends only its origin in cross-site referrers; the resident app retains `no-referrer`.
+
 **On a phone**, connect to the same Wi-Fi and run `python run.py --https`, then open the
 `https://<laptop-ip>:8000` address it prints and accept the certificate warning.
 Phones only allow the microphone and GPS on HTTPS pages.

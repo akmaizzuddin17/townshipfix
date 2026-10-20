@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 
 from . import config, db
 
@@ -15,7 +15,8 @@ def create_app():
     @app.after_request
     def _headers(resp):
         resp.headers["X-Content-Type-Options"] = "nosniff"
-        resp.headers["Referrer-Policy"] = "no-referrer"
+        # OSM tiles require a Referer; disclose only the staff page's origin cross-site.
+        resp.headers["Referrer-Policy"] = "strict-origin-when-cross-origin" if request.path == "/staff" else "no-referrer"
         if resp.mimetype in ("text/html", "application/javascript", "text/css"):
             resp.headers["Cache-Control"] = "no-cache"
         return resp

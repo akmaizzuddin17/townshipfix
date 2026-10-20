@@ -92,6 +92,9 @@ def media(name):
 def get_config():
     return jsonify(categories=config.CATEGORIES, flags=config.IMPACT_FLAGS, zones=config.ZONES,
                    teams=config.TEAMS, vision=tickets.classifier._provider(),
+                   map={"tile_url": config.MAP_TILE_URL, "attribution": config.MAP_ATTRIBUTION,
+                        "satellite_tile_url": config.MAP_SATELLITE_TILE_URL,
+                        "satellite_attribution": config.MAP_SATELLITE_ATTRIBUTION},
                    privacy_detectors=privacy.detectors_available())
 
 

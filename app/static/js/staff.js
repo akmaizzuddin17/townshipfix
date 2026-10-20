@@ -1,7 +1,18 @@
 import { api, el, fill, fmtDate, kerb, timeAgo } from "./common.js";
+import { createTicketMap } from "./staff-map.js";
 
 const $ = (id) => document.getElementById(id);
 const S = { pin: null, filter: "active", items: [], selected: null, cfg: null };
+const ticketMap = createTicketMap({
+  container: $("map"), status: $("map-status"), fitButton: $("map-fit"),
+  styleButtons: document.querySelectorAll("[data-map-style]"), imageryNote: $("map-imagery-note"),
+  onSelect: (code) => select(code),
+  onOpen: async (code) => {
+    await select(code);
+    $("detail").scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+    $("detail").focus({ preventScroll: true });
+  },
+});
 
 const STATUS = {
   open: "New", assigned: "Assigned", in_progress: "Being repaired",
@@ -84,44 +95,7 @@ function renderQueue() {
 
 // ----------------------------------------------------------------- map
 function renderMap() {
-  const pts = S.items.filter((t) => t.lat != null);
-  const all = [...pts, ...(S.cfg?.zones || [])];
-  if (!all.length) { fill($("map")); return; }
-  const lats = all.map((p) => p.lat), lngs = all.map((p) => p.lng);
-  const pad = 0.0006;
-  const [la0, la1, ln0, ln1] = [Math.min(...lats) - pad, Math.max(...lats) + pad, Math.min(...lngs) - pad, Math.max(...lngs) + pad];
-  const W = 420, H = 260;
-  const x = (lng) => ((lng - ln0) / (ln1 - ln0 || 1)) * W;
-  const y = (lat) => H - ((lat - la0) / (la1 - la0 || 1)) * H;
-  const NS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(NS, "svg");
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label", `Map of ${pts.length} tickets`);
-  const add = (tag, attrs, text) => {
-    const n = document.createElementNS(NS, tag);
-    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
-    if (text) n.textContent = text;
-    svg.append(n);
-    return n;
-  };
-  add("rect", { x: 0, y: 0, width: W, height: H, fill: "#f7f9f8" });
-  for (let i = 1; i < 6; i++) add("line", { x1: (W / 6) * i, y1: 0, x2: (W / 6) * i, y2: H, stroke: "#e2e8e5" });
-  for (let i = 1; i < 4; i++) add("line", { x1: 0, y1: (H / 4) * i, x2: W, y2: (H / 4) * i, stroke: "#e2e8e5" });
-  for (const z of S.cfg?.zones || []) {
-    add("text", { x: Math.min(W - 60, Math.max(60, x(z.lng))), y: Math.min(H - 6, y(z.lat) + 22), "text-anchor": "middle", "font-size": 10, fill: "#5b6b65" }, z.name);
-  }
-  const color = { P0: "#b3261e", P1: "#d9a400", P2: "#f2c230", P3: "#8a948f" };
-  for (const t of pts) {
-    const g = add("g", { tabindex: 0, role: "button", "aria-label": `${t.code} ${t.category_en}`, style: "cursor:pointer" });
-    const c = document.createElementNS(NS, "circle");
-    Object.entries({ cx: x(t.lng), cy: y(t.lat), r: 6 + Math.min(6, t.reporters * 1.5), fill: color[t.priority_band] || "#8a948f",
-      stroke: S.selected === t.code ? "#0f5c45" : "#fff", "stroke-width": S.selected === t.code ? 4 : 2 }).forEach(([k, v]) => c.setAttribute(k, v));
-    g.append(c);
-    g.addEventListener("click", () => select(t.code));
-    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(t.code); } });
-  }
-  fill($("map"), svg);
+  ticketMap.render(S.items, S.cfg, S.selected, S.filter);
 }
 
 // --------------------------------------------------------------- detail
@@ -182,6 +156,7 @@ function actionArea(t) {
 async function select(code) {
   S.selected = code;
   renderQueue(); renderMap();
+  ticketMap.showTicket(code);
   let t;
   try { t = await call(`/api/staff/tickets/${code}`); } catch (e) { fill($("detail"), el("p", { class: "error" }, e.message)); return; }
   const v = t.verification;

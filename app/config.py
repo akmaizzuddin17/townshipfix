@@ -15,6 +15,16 @@ DB_PATH = DATA_DIR / "townshipfix.db"
 STAFF_PIN = os.environ.get("TOWNSHIPFIX_STAFF_PIN", "1234")
 LOCAL_TZ = os.environ.get("TOWNSHIPFIX_TZ", "Asia/Kuala_Lumpur")
 MAX_UPLOAD_MB = 15
+# Leaflet is served locally; street and satellite tiles need an internet connection.
+# Keep attribution consistent with the tile provider when changing these settings.
+MAP_TILE_URL = os.environ.get("TOWNSHIPFIX_MAP_TILE_URL", "https://tile.openstreetmap.org/{z}/{x}/{y}.png")
+MAP_ATTRIBUTION = os.environ.get("TOWNSHIPFIX_MAP_ATTRIBUTION",
+                               '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors')
+MAP_SATELLITE_TILE_URL = os.environ.get("TOWNSHIPFIX_MAP_SATELLITE_TILE_URL",
+                                      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}")
+MAP_SATELLITE_ATTRIBUTION = os.environ.get("TOWNSHIPFIX_MAP_SATELLITE_ATTRIBUTION",
+    'Imagery &copy; <a href="https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9">Esri</a>, '
+    'Vantor, Earthstar Geographics, and the GIS User Community')
 # Blur faces / number plates when OpenCV ships the detectors (set to "off" to disable).
 PRIVACY_DETECTION = os.environ.get("TOWNSHIPFIX_PRIVACY_DETECTION", "on")
 
