@@ -15,6 +15,10 @@ DB_PATH = DATA_DIR / "townshipfix.db"
 STAFF_PIN = os.environ.get("TOWNSHIPFIX_STAFF_PIN", "1234")
 LOCAL_TZ = os.environ.get("TOWNSHIPFIX_TZ", "Asia/Kuala_Lumpur")
 MAX_UPLOAD_MB = 15
+# Photon-compatible address search; set an empty URL to use township areas only.
+GEOCODER_URL = os.environ.get("TOWNSHIPFIX_GEOCODER_URL", "https://photon.komoot.io/api/")
+MAP_TILE_URL = os.environ.get("TOWNSHIPFIX_MAP_TILE_URL", "https://tile.openstreetmap.org/{z}/{x}/{y}.png")
+MAP_ATTRIBUTION = os.environ.get("TOWNSHIPFIX_MAP_ATTRIBUTION", "© OpenStreetMap contributors")
 # Blur faces / number plates when OpenCV ships the detectors (set to "off" to disable).
 PRIVACY_DETECTION = os.environ.get("TOWNSHIPFIX_PRIVACY_DETECTION", "on")
 

@@ -46,7 +46,8 @@ CREATE TABLE IF NOT EXISTS reports (
     category_chosen TEXT,
     category_suggested TEXT,
     lat REAL, lng REAL,
-    location_source TEXT,              -- photo_gps, device_gps, zone
+    location_source TEXT,              -- photo_gps, device_gps, zone, address_search, map_pin
+    location_accuracy_m REAL,
     landmark TEXT,
     photo TEXT,
     privacy TEXT DEFAULT '{}',
@@ -89,6 +90,10 @@ def connect():
         conn.execute("PRAGMA foreign_keys = ON")
         conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(SCHEMA)
+        # Additive migration: preserve existing reports when upgrading a demo.
+        columns = {r[1] for r in conn.execute("PRAGMA table_info(reports)")}
+        if "location_accuracy_m" not in columns:
+            conn.execute("ALTER TABLE reports ADD COLUMN location_accuracy_m REAL")
         _local.conn, _local.path, _local.gen = conn, str(config.DB_PATH), _generation
     return conn
 

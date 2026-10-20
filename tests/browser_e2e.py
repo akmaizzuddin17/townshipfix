@@ -6,6 +6,7 @@ Starts its own server on a free port with a fresh data folder, so it never
 touches your demo data. Fails loudly on any JavaScript error.
 """
 import os
+import base64
 import socket
 import subprocess
 import sys
@@ -36,7 +37,11 @@ def main():
     photos = synthetic_photos.write_demo(data / "photos")
     port = free_port()
     env = {**os.environ, "TOWNSHIPFIX_DATA": str(data / "app"), "TOWNSHIPFIX_PRIVACY_DETECTION": "off"}
-    server = subprocess.Popen([sys.executable, "run.py", "--port", str(port)], cwd=ROOT, env=env,
+    # Keep the server clock consistent with the synthetic photo capture dates.
+    # Otherwise this walkthrough starts rejecting its own repair photos as it ages.
+    server_code = ("from app import clock, create_app; from tests.helpers import START; "
+                   f"clock.set_now(START); create_app().run(host='127.0.0.1', port={port}, threaded=True)")
+    server = subprocess.Popen([sys.executable, "-c", server_code], cwd=ROOT, env=env,
                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     base = f"http://127.0.0.1:{port}"
     errors = []
@@ -48,9 +53,13 @@ def main():
             except OSError:
                 time.sleep(0.25)
         with sync_playwright() as pw:
-            browser = pw.chromium.launch()
+            browser = pw.chromium.launch(channel=os.environ.get("TOWNSHIPFIX_TEST_BROWSER"))
             phone = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2,
                                         locale="en-MY", has_touch=True, is_mobile=True)
+            # No requests to public tile servers during automated tests.
+            phone.route("https://tile.openstreetmap.org/**", lambda r: r.fulfill(content_type="image/png",
+                body=base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=")))
+            phone.route("https://fonts.googleapis.com/**", lambda r: r.abort())
             page = phone.new_page()
             page.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
             page.on("console", lambda m: m.type == "error" and "fonts.g" not in m.text and "ERR_" not in m.text
@@ -75,6 +84,7 @@ def main():
                 expect(page.locator('#categories .chip[data-cat="streetlight"]')).to_have_attribute("aria-pressed", "true", timeout=8000)
                 if i == 0:
                     page.screenshot(path=SHOTS / "01_resident_form.png", full_page=True)
+                page.click("#confirm-location")
                 page.click("#check")
                 expect(page.locator("#step-confirm")).to_be_visible()
                 if i == 1:
@@ -93,12 +103,14 @@ def main():
             page.click("#new-report")
             page.fill("#text", "Ramp OKU di depan klinik dihalang motosikal, kerusi roda tak boleh lalu")
             page.select_option("#zone", "Z3")
+            page.click("#confirm-location")
             page.click("#check")
             page.click("#send")
             expect(page.locator("#step-done")).to_be_visible(timeout=15000)
             page.click("#new-report")
             page.fill("#text", "Exposed wire sparking at the playground")
             page.select_option("#zone", "Z2")
+            page.click("#confirm-location")
             page.click("#check")
             expect(page.locator(".notice.danger")).to_be_visible()
             page.click("#send")

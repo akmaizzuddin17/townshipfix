@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700;800&display=swap">
   <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
 </head>
 <body>
   <div class="app">
@@ -55,12 +56,30 @@
         <div class="field">
           <span class="label" data-t="where">Where is it?</span>
           <div class="location">
-            <span class="tag" id="loc-status" data-t="locNone">No location yet</span>
-            <button type="button" class="btn" id="use-gps" data-t="useGps">Use my location</button>
+            <button type="button" class="btn" id="use-gps" data-t="useGps">Use my current location</button>
+            <button type="button" class="btn" id="use-photo-location" data-t="usePhotoLocation" hidden>Use photo location</button>
           </div>
+          <p class="hint" data-t="locationHelp">At the problem now? Use your phone location. Reporting later? Enter the place below.</p>
+          <label for="location-query" data-t="enterLocation">Or enter the problem's location</label>
+          <div class="row location-search">
+            <input type="text" id="location-query" maxlength="160" autocomplete="off" data-tp="locationPh" placeholder="Road, building or landmark, e.g. Elmina Central Park">
+            <button type="button" class="btn" id="search-location" data-t="searchLocation">Search</button>
+          </div>
+          <p class="hint" id="location-search-status" role="status"></p>
+          <ul id="location-results" class="location-results" aria-label="Location search results"></ul>
+          <p class="hint location-credit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a> · <span data-t="searchPrivacy">Address search uses Photon. Enter public places, without personal details.</span></p>
           <label for="zone" class="hint" style="display:block;margin-top:10px" data-t="orArea">Or pick the area</label>
           <select id="zone"><option value="" data-t="chooseArea">Choose an area</option></select>
           <input type="text" id="landmark" style="margin-top:8px" data-tp="landmarkPh" placeholder="Nearby landmark (optional), e.g. Block C lift lobby">
+          <p><span class="tag" id="loc-status" role="status" data-t="locNone">No location yet</span></p>
+          <div id="location-preview" hidden>
+            <p id="location-label" class="location-label"></p>
+            <div id="location-map" class="location-map" role="region" aria-label="Problem location map"></div>
+            <p class="hint" data-t="mapHelp">Tap the map or drag the pin to the problem. You can also select the pin with Tab and move it with arrow keys.</p>
+            <p class="hint" id="location-coordinates"></p>
+            <p class="hint" id="location-map-status" role="status"></p>
+            <button type="button" class="btn block" id="confirm-location" data-t="confirmLocation">Yes, the problem is here</button>
+          </div>
         </div>
 
         <div class="field">
@@ -95,6 +114,7 @@
         <h1 data-t="confirmTitle">Is this right?</h1>
         <div class="sheet">
           <p class="readback" id="readback"></p>
+          <p class="hint" id="confirm-location-summary"></p>
           <button type="button" class="btn" id="speak-back" data-t="readAloud">Read it aloud</button>
           <div id="confirm-notices"></div>
           <img id="confirm-photo" alt="" style="border-radius:10px;margin-top:12px;max-height:220px;object-fit:cover;width:100%" hidden>
@@ -137,6 +157,7 @@
       <div id="track-result"></div>
     </main>
   </div>
+  <script src="/static/vendor/leaflet/leaflet.js"></script>
   <script type="module" src="/static/js/resident.js"></script>
 </body>
 </html>

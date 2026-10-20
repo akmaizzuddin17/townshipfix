@@ -41,8 +41,23 @@ python scripts/load_demo.py --complete                               # your real
 
 ## The 2-minute demo
 
+### Choose and confirm the problem location
+
+- **Use my current location** requests one phone location reading, with permission. It does not track the resident continuously. Use this when standing at the problem; HTTPS is required on phones.
+- **Use photo location** uses GPS metadata when the uploaded photo includes it. Photos without GPS still work: search for the place or choose an area instead. A photo never overwrites an explicit manual or phone location choice.
+- **Enter a road, building or landmark**, press Search, and select a result. Configured township areas are searched locally; other queries use Photon. Search is button-triggered, cached and rate-limited. Only the search words go to Photon, not the report or photo.
+- Review the map, tap or drag the pin to correct it, and tap **Yes, the problem is here** before checking the report. Keyboard users can focus the pin and use arrow keys. Changing location requires confirmation again. Add a nearby landmark for the crew.
+
+Map tiles and address lookup need internet; local area selection remains available if either service fails. The bundled Leaflet library loads locally. Areas in `app/config.py` are illustrative demo coordinates: replace them with your pilot township's roads and landmarks before field testing.
+
+`TOWNSHIPFIX_GEOCODER_URL` selects a Photon-compatible API (default: `https://photon.komoot.io/api/`); an empty value disables external search. The [Photon public demo](https://github.com/komoot/photon#demo-server) allows reasonable small-project usage but may throttle and has no availability guarantee; use a private provider for a larger pilot. `TOWNSHIPFIX_MAP_TILE_URL` and `TOWNSHIPFIX_MAP_ATTRIBUTION` configure map tiles. Default tiles use OpenStreetMap with visible attribution and normal browser caching; follow the [tile usage policy](https://operations.osmfoundation.org/policies/tiles/) and do not bulk-download/offline-cache tiles.
+
+Coordinates, location source and optional phone accuracy are saved with the report. Existing databases upgrade automatically without deleting reports.
+
+### Walkthrough
+
 1. Phone 1 (Bahasa Melayu): photo of the broken streetlight, say *"Lampu jalan rosak, gelap waktu malam"*.
-   The app reads it back: *"Saya faham: Lampu jalan rosak… Betul?"* Send, and you get plate **TF-0001**.
+   Confirm the problem's map pin. The app reads it back: *"Saya faham: Lampu jalan rosak… Betul?"* Send, and you get plate **TF-0001**.
 2. Phones 2 and 3 photograph the same lamp from other angles. Before sending they see
    *"Already reported by 1 neighbour (TF-0001)… photo match 96%"*. Still one ticket, now 3 reporters, higher priority.
 3. A resident reports *"exposed wire sparking at the playground"*: P0 emergency, security alerted, top of the queue.
@@ -84,8 +99,9 @@ it reports accuracy and suggests new thresholds for `app/config.py`.
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -t . -v      # 55 tests: language, vision, privacy, priority, full flows
+python -m unittest discover -s tests -t . -v      # 65 tests: location, language, vision, privacy, priority, full flows
 python tests/browser_e2e.py                        # clicks through both apps in a headless browser (needs playwright)
+python tests/browser_locations.py                  # GPS, manual search, pin correction and permission failures
 ```
 
 GitHub Actions runs the tests and the photo check on every push (see the Actions tab).

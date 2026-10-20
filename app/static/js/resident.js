@@ -1,4 +1,5 @@
 import { api, el, fill, fmtDate, kerb, store, timeAgo, STATUS_STEPS } from "./common.js";
+import { createLocationPicker } from "./location.js";
 
 const T = {
   en: {
@@ -10,7 +11,20 @@ const T = {
     speak: "Speak instead", stop: "Stop", listening: "Listening… speak now",
     noVoice: "Voice input isn't available in this browser. Please type instead.",
     noVoiceHttp: "Voice needs a secure (https) link. Please type, or ask the organiser for the https link.",
-    where: "Where is it?", locNone: "No location yet", useGps: "Use my location", orArea: "Or pick the area",
+    where: "Where is it?", locNone: "No location yet", useGps: "Use my current location", orArea: "Or pick the area",
+    usePhotoLocation: "Use photo location", enterLocation: "Or enter the problem's location",
+    locationHelp: "At the problem now? Use your phone location. Reporting later? Enter the place below.",
+    locationPh: "Road, building or landmark, e.g. Elmina Central Park", searchLocation: "Search",
+    searchingLocation: "Searching…", chooseResult: "Select the correct place below.",
+    searchShort: "Enter at least 3 characters to search.", noLocations: "No matching places. Try a road and township name, or choose an area below.",
+    searchUnavailable: "Address search is unavailable. Choose an area below and adjust its pin, or try again shortly.",
+    searchPrivacy: "Address search uses Photon. Enter public places, without personal details.",
+    locAddress: "Location from address search", locPin: "Pin placed manually", locationConfirmed: "Location confirmed",
+    confirmLocation: "Yes, the problem is here", needConfirmLoc: "Please confirm where the problem is on the location preview.",
+    mapHelp: "Tap the map or drag the pin to the problem. You can also select the pin with Tab and move it with arrow keys.",
+    mapUnavailable: "Map tiles could not load. Check the place name and coordinates, choose another area or try again online.",
+    pinLabel: "Problem location pin. Use arrow keys to move it.", gpsAccuracy: (m) => `Phone accuracy: approximately ${m} m`,
+    confirmedLocation: (s) => `Confirmed problem location: ${s}`, photoUploading: "Please wait for the photo to finish uploading.",
     chooseArea: "Choose an area", landmarkPh: "Nearby landmark (optional), e.g. Block C lift lobby",
     locPhoto: "Location from your photo", locDevice: "Location from your phone", locZone: "Area chosen",
     gpsWait: "Finding you…", gpsFail: "Couldn't get your location. Pick the area instead.",
@@ -52,7 +66,20 @@ const T = {
     speak: "Cakap sahaja", stop: "Berhenti", listening: "Sedang mendengar… sila bercakap",
     noVoice: "Input suara tidak tersedia dalam pelayar ini. Sila taip.",
     noVoiceHttp: "Suara perlukan pautan selamat (https). Sila taip, atau minta pautan https.",
-    where: "Di mana?", locNone: "Belum ada lokasi", useGps: "Guna lokasi saya", orArea: "Atau pilih kawasan",
+    where: "Di mana?", locNone: "Belum ada lokasi", useGps: "Guna lokasi semasa saya", orArea: "Atau pilih kawasan",
+    usePhotoLocation: "Guna lokasi gambar", enterLocation: "Atau taip lokasi masalah",
+    locationHelp: "Anda di tempat masalah sekarang? Guna lokasi telefon. Melapor kemudian? Taip tempatnya di bawah.",
+    locationPh: "Jalan, bangunan atau mercu tanda, cth. Elmina Central Park", searchLocation: "Cari",
+    searchingLocation: "Sedang mencari…", chooseResult: "Pilih tempat yang betul di bawah.",
+    searchShort: "Taip sekurang-kurangnya 3 aksara untuk mencari.", noLocations: "Tiada tempat sepadan. Cuba nama jalan dan perbandaran, atau pilih kawasan di bawah.",
+    searchUnavailable: "Carian alamat tidak tersedia. Pilih kawasan di bawah dan laraskan pin, atau cuba sebentar lagi.",
+    searchPrivacy: "Carian alamat menggunakan Photon. Masukkan tempat awam tanpa maklumat peribadi.",
+    locAddress: "Lokasi daripada carian alamat", locPin: "Pin diletakkan secara manual", locationConfirmed: "Lokasi disahkan",
+    confirmLocation: "Ya, masalah ada di sini", needConfirmLoc: "Sila sahkan tempat masalah pada pratonton lokasi.",
+    mapHelp: "Sentuh peta atau seret pin ke tempat masalah. Anda juga boleh pilih pin dengan Tab dan gerakkannya dengan kekunci anak panah.",
+    mapUnavailable: "Peta tidak dapat dimuatkan. Semak nama tempat dan koordinat, pilih kawasan lain atau cuba semula dalam talian.",
+    pinLabel: "Pin lokasi masalah. Gunakan kekunci anak panah untuk menggerakkannya.", gpsAccuracy: (m) => `Ketepatan telefon: kira-kira ${m} m`,
+    confirmedLocation: (s) => `Lokasi masalah yang disahkan: ${s}`, photoUploading: "Sila tunggu sehingga gambar selesai dimuat naik.",
     chooseArea: "Pilih kawasan", landmarkPh: "Mercu tanda berdekatan (pilihan), cth. lobi lif Blok C",
     locPhoto: "Lokasi daripada gambar", locDevice: "Lokasi daripada telefon", locZone: "Kawasan dipilih",
     gpsWait: "Mencari lokasi…", gpsFail: "Tidak dapat lokasi. Sila pilih kawasan.",
@@ -91,6 +118,8 @@ const state = {
   lang: store.get("tf_lang", "en"), cfg: null, photo: null, loc: null, zone: "", category: null,
   suggested: null, flags: new Set(), flagsOff: new Set(), startedAt: null, analysis: null, sending: false,
 };
+let locationPicker;
+let photoVersion = 0;
 const $ = (id) => document.getElementById(id);
 const t = (k, ...a) => { const v = T[state.lang][k]; return typeof v === "function" ? v(...a) : v; };
 
@@ -103,7 +132,7 @@ function applyLang() {
   document.querySelectorAll("[data-tp]").forEach((n) => { n.placeholder = T[state.lang][n.dataset.tp]; });
   document.querySelectorAll(".lang button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === state.lang)));
   if (state.cfg) { renderCategories(); renderFlags(); }
-  renderLocStatus();
+  locationPicker?.render();
   if (state.photo) $("photo-drop").querySelector("img")?.setAttribute("alt", t("takePhoto"));
 }
 
@@ -166,6 +195,10 @@ function scheduleSuggest() {
 async function onPhoto(file) {
   if (!file) return;
   touch();
+  const version = ++photoVersion;
+  state.photo = null;
+  state.uploading = true;
+  locationPicker.suggestPhoto(null);
   const drop = $("photo-drop");
   const url = URL.createObjectURL(file);
   drop.classList.add("has-photo");
@@ -178,8 +211,9 @@ async function onPhoto(file) {
   fd.append("photo", file);
   try {
     const r = await api("/api/photos", { method: "POST", form: fd });
+    if (version !== photoVersion) return;
     state.photo = r;
-    if (r.gps) setLoc(r.gps.lat, r.gps.lng, "photo_gps");
+    locationPicker.suggestPhoto(r.gps);
     fill(meta, 
       el("span", { class: "tag good" }, state.lang === "ms" ? "Gambar dimuat naik" : "Photo uploaded"),
       r.privacy?.blurred ? el("span", { class: "tag" }, state.lang === "ms" ? `${r.privacy.blurred} wajah/plat dikaburkan` : `${r.privacy.blurred} face/plate blurred`) : null,
@@ -187,33 +221,10 @@ async function onPhoto(file) {
     );
     scheduleSuggest();
   } catch (e) {
+    if (version !== photoVersion) return;
     state.photo = null;
     fill(meta, el("span", { class: "tag bad" }, e.message));
-  }
-}
-
-// ------------------------------------------------------------ location
-function setLoc(lat, lng, source) { state.loc = { lat, lng, source }; renderLocStatus(); }
-function renderLocStatus() {
-  const s = $("loc-status");
-  if (!s) return;
-  if (state.loc) {
-    s.className = "tag good";
-    s.textContent = { photo_gps: t("locPhoto"), device_gps: t("locDevice") }[state.loc.source] || t("locZone");
-  } else if (state.zone) {
-    s.className = "tag good"; s.textContent = t("locZone");
-  } else { s.className = "tag"; s.textContent = t("locNone"); }
-}
-function useGps() {
-  touch();
-  if (!window.isSecureContext) { $("loc-status").className = "tag warn"; $("loc-status").textContent = t("gpsHttp"); return; }
-  if (!navigator.geolocation) { $("loc-status").textContent = t("gpsFail"); return; }
-  $("loc-status").textContent = t("gpsWait");
-  navigator.geolocation.getCurrentPosition(
-    (p) => setLoc(+p.coords.latitude.toFixed(6), +p.coords.longitude.toFixed(6), "device_gps"),
-    () => { $("loc-status").className = "tag warn"; $("loc-status").textContent = t("gpsFail"); },
-    { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
-  );
+  } finally { if (version === photoVersion) state.uploading = false; URL.revokeObjectURL(url); }
 }
 
 // ------------------------------------------------------------ voice
@@ -263,25 +274,33 @@ function payload() {
   const p = {
     text: $("text").value.trim(), photo_ref: state.photo?.ref || null, lang: state.lang,
     category: state.category || state.suggested || null, flags: [...state.flags],
-    landmark: $("landmark").value.trim() || null, zone: state.zone || null,
+    landmark: [$("landmark").value.trim(), state.loc?.label].filter(Boolean).join("; ") || null, zone: state.zone || null,
     on_behalf_of: $("behalf-box").open ? $("behalf").value.trim() || null : null,
     contact: $("contact").value.trim() || null,
   };
-  if (state.loc) Object.assign(p, { lat: state.loc.lat, lng: state.loc.lng, location_source: state.loc.source });
+  if (state.loc) Object.assign(p, { lat: state.loc.lat, lng: state.loc.lng, location_source: state.loc.source,
+    location_accuracy_m: state.loc.accuracy });
   return p;
 }
 
 async function check() {
   const err = $("form-error");
   err.textContent = "";
+  if (state.uploading) { err.textContent = t("photoUploading"); return; }
   const p = payload();
   if (!p.text && !p.photo_ref) { err.textContent = t("needWhat"); return; }
   if (!state.loc && !state.zone) { err.textContent = t("needLoc"); return; }
+  if (!locationPicker.confirmed) { err.textContent = t("needConfirmLoc"); return; }
+  const locationSummary = locationPicker.summary();
   $("check").disabled = true;
   try {
     const a = await api("/api/analyze", { method: "POST", json: p });
+    if (!locationPicker.confirmed || locationPicker.summary() !== locationSummary) {
+      err.textContent = t("needConfirmLoc"); return;
+    }
     state.analysis = a;
     $("readback").textContent = a.readback;
+    $("confirm-location-summary").textContent = t("confirmedLocation", locationSummary);
     const notes = $("confirm-notices");
     fill(notes);
     if (a.emergency?.length) notes.append(el("div", { class: "notice danger", role: "alert" }, t("emergency")));
@@ -305,6 +324,7 @@ async function check() {
 
 async function send() {
   if (state.sending) return;
+  if (!locationPicker.confirmed) { $("send-error").textContent = t("needConfirmLoc"); return; }
   state.sending = true;
   $("send").disabled = true;
   $("send").textContent = t("sending");
@@ -333,6 +353,8 @@ async function send() {
 }
 
 function resetForm() {
+  photoVersion++;
+  state.uploading = false;
   Object.assign(state, { photo: null, loc: null, zone: "", category: null, suggested: null, flags: new Set(), flagsOff: new Set(), startedAt: null, analysis: null });
   for (const id of ["text", "landmark", "behalf", "contact"]) $(id).value = "";
   $("zone").value = "";
@@ -345,7 +367,8 @@ function resetForm() {
   fill($("photo-meta"));
   $("suggest-why").textContent = "";
   $("form-error").textContent = "";
-  renderCategories(); renderFlags(); renderLocStatus();
+  locationPicker.reset();
+  renderCategories(); renderFlags();
   $("step-done").hidden = true; $("step-confirm").hidden = true; $("step-form").hidden = false;
   window.scrollTo(0, 0);
 }
@@ -426,10 +449,11 @@ async function track(ev) {
 async function boot() {
   state.cfg = await api("/api/config");
   for (const z of state.cfg.zones) $("zone").append(el("option", { value: z.id }, z.name));
-  $("zone").addEventListener("change", (e) => { touch(); state.zone = e.target.value; renderLocStatus(); });
+  locationPicker = createLocationPicker({ cfg: state.cfg, t, onChange: (loc) => {
+    if (loc) touch(); state.loc = loc; state.zone = $("zone").value;
+  } });
   $("photo").addEventListener("change", (e) => onPhoto(e.target.files[0]));
   $("text").addEventListener("input", () => { touch(); scheduleSuggest(); });
-  $("use-gps").addEventListener("click", useGps);
   $("check").addEventListener("click", check);
   $("send").addEventListener("click", send);
   $("edit").addEventListener("click", () => { $("step-confirm").hidden = true; $("step-form").hidden = false; });

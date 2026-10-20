@@ -15,7 +15,8 @@ def create_app():
     @app.after_request
     def _headers(resp):
         resp.headers["X-Content-Type-Options"] = "nosniff"
-        resp.headers["Referrer-Policy"] = "no-referrer"
+        # OSM tiles require a Referer. Send only the origin to external services.
+        resp.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         if resp.mimetype in ("text/html", "application/javascript", "text/css"):
             resp.headers["Cache-Control"] = "no-cache"
         return resp

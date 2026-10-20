@@ -5,7 +5,7 @@ import shutil
 from flask import Blueprint, abort, current_app, jsonify, request, send_from_directory
 
 from . import clock, config, db
-from .services import metrics, photos, privacy, tickets
+from .services import locations, metrics, photos, privacy, tickets
 from .services.photos import PhotoError
 from .services.tickets import Problem
 
@@ -92,7 +92,16 @@ def media(name):
 def get_config():
     return jsonify(categories=config.CATEGORIES, flags=config.IMPACT_FLAGS, zones=config.ZONES,
                    teams=config.TEAMS, vision=tickets.classifier._provider(),
-                   privacy_detectors=privacy.detectors_available())
+                   privacy_detectors=privacy.detectors_available(),
+                   map_tiles=config.MAP_TILE_URL, map_attribution=config.MAP_ATTRIBUTION)
+
+
+@bp.get("/api/locations/search")
+def search_locations():
+    query = request.args.get("q", "").strip()
+    if not 3 <= len(query) <= 160:
+        raise Problem("Enter a road, building or area name (3–160 characters).")
+    return jsonify(locations.search(query))
 
 
 @bp.post("/api/photos")
@@ -111,6 +120,8 @@ def upload_photo():
 def _place(data):
     lat = _num(data.get("lat"), "lat", -90, 90)
     lng = _num(data.get("lng"), "lng", -180, 180)
+    if (lat is None) != (lng is None):
+        raise Problem("Both latitude and longitude are needed.")
     zone = next((z for z in config.ZONES if z["id"] == data.get("zone")), None)
     landmark = (data.get("landmark") or "").strip()[:120] or (zone["name"] if zone else None)
     source = data.get("location_source") or ("zone" if zone and lat is None else "device_gps")
@@ -160,7 +171,8 @@ def create_report():
         flags=[str(f) for f in flags], lang=data.get("lang", "en"), photo=photo,
         photo_bytes=(config.UPLOAD_DIR / photo["name"]).read_bytes() if photo else None,
         on_behalf_of=(data.get("on_behalf_of") or "").strip()[:80] or None,
-        contact=(data.get("contact") or "").strip()[:40] or None, client_duration_ms=dur)
+        contact=(data.get("contact") or "").strip()[:40] or None, client_duration_ms=dur,
+        location_accuracy_m=_num(data.get("location_accuracy_m"), "location accuracy", 0, 10_000_000))
     return jsonify(res), 201
 
 

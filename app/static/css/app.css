@@ -117,6 +117,16 @@ textarea:focus, input:focus, select:focus { border-color: var(--sign); outline: 
 .tag.bad { background: #f8dcd9; color: var(--danger); }
 
 .location { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.location-search input { min-width: 0; flex: 1; }
+.location-search .btn { flex-shrink: 0; padding-inline: 14px; }
+.location-results { list-style: none; margin: 8px 0; padding: 0; }
+.location-result { width: 100%; min-height: 48px; text-align: left; background: white; border: 2px solid var(--line); border-radius: 8px; padding: 10px; margin-bottom: 6px; cursor: pointer; }
+.location-credit { font-size: .75rem; }
+.location-credit a { color: var(--sign); }
+.location-label { font-weight: 700; overflow-wrap: anywhere; }
+.location-map { height: 260px; border: 2px solid var(--line); border-radius: 10px; z-index: 0; background: var(--concrete); }
+.report-pin { background: transparent; color: var(--sign); font-size: 34px; line-height: 36px; text-align: center; text-shadow: 0 0 3px white; }
+.report-pin span { display: block; border-bottom: 8px solid var(--sign); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: white; }
 details.more { border-top: 2px solid var(--line); margin-top: 18px; padding-top: 10px; }
 details.more summary { font-weight: 700; cursor: pointer; min-height: 40px; display: flex; align-items: center; }
 
