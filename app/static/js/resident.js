@@ -3,6 +3,11 @@ import { createLocationPicker } from "./location.js";
 
 const T = {
   en: {
+    brandCaption: "Neighbourhood care, made simple", residentServices: "RESIDENT SERVICES",
+    issueHeading: "The issue", issueHint: "Show us what needs attention.", locationHint: "Help the team find the right spot.",
+    moreDetails: "A few more details", optionalHint: "Optional · category, people affected and contact",
+    reviewHint: "You can review everything before sending.", landmarkLabel: "Nearby landmark (optional)",
+    hackathonCaption: "Sime Darby Property University Hackathon 2026 project",
     tabReport: "Report", tabMine: "My reports", tabTrack: "Track",
     title: "What needs fixing?", lede: "Take a photo or just tell us. We'll send it to the right team.",
     takePhoto: "Take a photo", photoOptional: "Optional, but it helps us find the spot",
@@ -13,12 +18,12 @@ const T = {
     noVoiceHttp: "Voice needs a secure (https) link. Please type, or ask the organiser for the https link.",
     where: "Where is it?", locNone: "No location yet", useGps: "Use my current location", orArea: "Or pick the area",
     usePhotoLocation: "Use photo location", enterLocation: "Or enter the problem's location",
-    locationHelp: "At the problem now? Use your phone location. Reporting later? Enter the place below.",
-    locationPh: "Road, building or landmark, e.g. Elmina Central Park", searchLocation: "Search",
+    locationHelp: "At the problem? Use GPS. Reporting later? Search for the place below.",
+    locationPh: "Road, building or landmark", searchLocation: "Search",
     searchingLocation: "Searching…", chooseResult: "Select the correct place below.",
     searchShort: "Enter at least 3 characters to search.", noLocations: "No matching places. Try a road and township name, or choose an area below.",
     searchUnavailable: "Address search is unavailable. Choose an area below and adjust its pin, or try again shortly.",
-    searchPrivacy: "Address search uses Photon. Enter public places, without personal details.",
+    searchPrivacy: "Only your search text is shared with the map provider.",
     locAddress: "Location from address search", locPin: "Pin placed manually", locationConfirmed: "Location confirmed",
     confirmLocation: "Yes, the problem is here", needConfirmLoc: "Please confirm where the problem is on the location preview.",
     mapHelp: "Tap the map or drag the pin to the problem. You can also select the pin with Tab and move it with arrow keys.",
@@ -58,6 +63,11 @@ const T = {
     mergedInto: (c) => `Combined with ${c}`,
   },
   ms: {
+    brandCaption: "Penjagaan kejiranan, lebih mudah", residentServices: "PERKHIDMATAN PENDUDUK",
+    issueHeading: "Masalah", issueHint: "Tunjukkan perkara yang perlu dibaiki.", locationHint: "Bantu pasukan cari tempat yang betul.",
+    moreDetails: "Sedikit maklumat tambahan", optionalHint: "Pilihan · kategori, orang terjejas dan telefon",
+    reviewHint: "Anda boleh semak semuanya sebelum menghantar.", landmarkLabel: "Mercu tanda berdekatan (pilihan)",
+    hackathonCaption: "Projek Sime Darby Property University Hackathon 2026",
     tabReport: "Lapor", tabMine: "Laporan saya", tabTrack: "Semak",
     title: "Apa yang perlu dibaiki?", lede: "Ambil gambar atau beritahu kami. Kami hantar kepada pasukan yang betul.",
     takePhoto: "Ambil gambar", photoOptional: "Pilihan, tetapi membantu kami cari tempatnya",
@@ -68,12 +78,12 @@ const T = {
     noVoiceHttp: "Suara perlukan pautan selamat (https). Sila taip, atau minta pautan https.",
     where: "Di mana?", locNone: "Belum ada lokasi", useGps: "Guna lokasi semasa saya", orArea: "Atau pilih kawasan",
     usePhotoLocation: "Guna lokasi gambar", enterLocation: "Atau taip lokasi masalah",
-    locationHelp: "Anda di tempat masalah sekarang? Guna lokasi telefon. Melapor kemudian? Taip tempatnya di bawah.",
-    locationPh: "Jalan, bangunan atau mercu tanda, cth. Elmina Central Park", searchLocation: "Cari",
+    locationHelp: "Di tempat masalah? Guna GPS. Melapor kemudian? Cari tempatnya di bawah.",
+    locationPh: "Jalan, bangunan atau mercu tanda", searchLocation: "Cari",
     searchingLocation: "Sedang mencari…", chooseResult: "Pilih tempat yang betul di bawah.",
     searchShort: "Taip sekurang-kurangnya 3 aksara untuk mencari.", noLocations: "Tiada tempat sepadan. Cuba nama jalan dan perbandaran, atau pilih kawasan di bawah.",
     searchUnavailable: "Carian alamat tidak tersedia. Pilih kawasan di bawah dan laraskan pin, atau cuba sebentar lagi.",
-    searchPrivacy: "Carian alamat menggunakan Photon. Masukkan tempat awam tanpa maklumat peribadi.",
+    searchPrivacy: "Hanya teks carian dikongsi dengan penyedia peta.",
     locAddress: "Lokasi daripada carian alamat", locPin: "Pin diletakkan secara manual", locationConfirmed: "Lokasi disahkan",
     confirmLocation: "Ya, masalah ada di sini", needConfirmLoc: "Sila sahkan tempat masalah pada pratonton lokasi.",
     mapHelp: "Sentuh peta atau seret pin ke tempat masalah. Anda juga boleh pilih pin dengan Tab dan gerakkannya dengan kekunci anak panah.",
@@ -360,6 +370,7 @@ function resetForm() {
   $("zone").value = "";
   $("photo").value = "";
   $("behalf-box").open = false;
+  $("optional-details").open = false;
   const drop = $("photo-drop");
   drop.classList.remove("has-photo");
   drop.querySelector("img")?.remove();

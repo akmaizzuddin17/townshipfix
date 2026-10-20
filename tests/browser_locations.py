@@ -61,7 +61,8 @@ def main():
 
             def fresh():
                 page.goto(base)
-                expect(page.locator("#categories button").first).to_be_visible()
+                # Optional categories are collapsed in the simplified form.
+                expect(page.locator("#zone option[value='Z1']")).to_be_attached()
                 page.fill("#text", "Broken streetlight beside the bus stop")
 
             def submit():

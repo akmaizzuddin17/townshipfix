@@ -106,18 +106,18 @@ function renderMap() {
     svg.append(n);
     return n;
   };
-  add("rect", { x: 0, y: 0, width: W, height: H, fill: "#f7f9f8" });
+  add("rect", { x: 0, y: 0, width: W, height: H, fill: "#fafbfc" });
   for (let i = 1; i < 6; i++) add("line", { x1: (W / 6) * i, y1: 0, x2: (W / 6) * i, y2: H, stroke: "#e2e8e5" });
   for (let i = 1; i < 4; i++) add("line", { x1: 0, y1: (H / 4) * i, x2: W, y2: (H / 4) * i, stroke: "#e2e8e5" });
   for (const z of S.cfg?.zones || []) {
     add("text", { x: Math.min(W - 60, Math.max(60, x(z.lng))), y: Math.min(H - 6, y(z.lat) + 22), "text-anchor": "middle", "font-size": 10, fill: "#5b6b65" }, z.name);
   }
-  const color = { P0: "#b3261e", P1: "#d9a400", P2: "#f2c230", P3: "#8a948f" };
+  const color = { P0: "#bb1820", P1: "#ef6c2c", P2: "#d99a17", P3: "#9aa4b1" };
   for (const t of pts) {
     const g = add("g", { tabindex: 0, role: "button", "aria-label": `${t.code} ${t.category_en}`, style: "cursor:pointer" });
     const c = document.createElementNS(NS, "circle");
     Object.entries({ cx: x(t.lng), cy: y(t.lat), r: 6 + Math.min(6, t.reporters * 1.5), fill: color[t.priority_band] || "#8a948f",
-      stroke: S.selected === t.code ? "#0f5c45" : "#fff", "stroke-width": S.selected === t.code ? 4 : 2 }).forEach(([k, v]) => c.setAttribute(k, v));
+      stroke: S.selected === t.code ? "#d71920" : "#fff", "stroke-width": S.selected === t.code ? 4 : 2 }).forEach(([k, v]) => c.setAttribute(k, v));
     g.append(c);
     g.addEventListener("click", () => select(t.code));
     g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(t.code); } });

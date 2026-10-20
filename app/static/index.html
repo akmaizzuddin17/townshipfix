@@ -3,17 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0f5c45">
+  <meta name="theme-color" content="#d71920">
   <title>TownshipFix</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700;800&display=swap">
+  <link rel="preload" href="/static/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/css/app.css">
   <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
 </head>
-<body>
+<body class="resident">
   <div class="app">
     <header class="topbar">
-      <span class="plate brand" aria-label="TownshipFix">TownshipFix</span>
+      <div class="brand-lockup">
+        <img class="brand-logo" src="/static/assets/sime-darby-property.png" alt="Sime Darby Property" width="88" height="68">
+        <div class="brand-wordmark"><strong>TownshipFix</strong><span data-t="brandCaption">Neighbourhood care, made simple</span></div>
+      </div>
       <div class="lang" role="group" aria-label="Language">
         <button type="button" data-lang="ms" aria-pressed="false">BM</button>
         <button type="button" data-lang="en" aria-pressed="true">EN</button>
@@ -28,8 +30,14 @@
     <!-- REPORT -->
     <main class="pane" id="pane-report" role="tabpanel" aria-labelledby="tab-report">
       <section id="step-form">
+        <div class="form-intro">
+        <p class="eyebrow" data-t="residentServices">RESIDENT SERVICES</p>
         <h1 data-t="title">What needs fixing?</h1>
         <p class="lede" data-t="lede">Take a photo or just tell us. We'll send it to the right team.</p>
+        </div>
+
+        <section class="report-card issue-card" aria-labelledby="issue-heading">
+        <div class="section-heading"><span class="section-number" aria-hidden="true">01</span><div><h2 id="issue-heading" data-t="issueHeading">The issue</h2><p data-t="issueHint">Show us what needs attention.</p></div></div>
 
         <label class="photo-drop" id="photo-drop">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -39,7 +47,7 @@
         </label>
         <div class="photo-meta" id="photo-meta"></div>
 
-        <div class="field">
+        <div class="field description-field">
           <label for="text" data-t="describe">Describe it</label>
           <div class="row">
             <textarea id="text" data-tp="describePh" placeholder="e.g. Lampu jalan rosak depan Blok C, gelap waktu malam"></textarea>
@@ -52,9 +60,10 @@
             <span class="hint" id="mic-status" aria-live="polite"></span>
           </div>
         </div>
+        </section>
 
-        <div class="field">
-          <span class="label" data-t="where">Where is it?</span>
+        <section class="report-card location-card" aria-labelledby="location-heading">
+          <div class="section-heading"><span class="section-number" aria-hidden="true">02</span><div><h2 id="location-heading" data-t="where">Where is it?</h2><p data-t="locationHint">Help the team find the right spot.</p></div></div>
           <div class="location">
             <button type="button" class="btn" id="use-gps" data-t="useGps">Use my current location</button>
             <button type="button" class="btn" id="use-photo-location" data-t="usePhotoLocation" hidden>Use photo location</button>
@@ -67,11 +76,11 @@
           </div>
           <p class="hint" id="location-search-status" role="status"></p>
           <ul id="location-results" class="location-results" aria-label="Location search results"></ul>
-          <p class="hint location-credit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a> · <span data-t="searchPrivacy">Address search uses Photon. Enter public places, without personal details.</span></p>
           <label for="zone" class="hint" style="display:block;margin-top:10px" data-t="orArea">Or pick the area</label>
           <select id="zone"><option value="" data-t="chooseArea">Choose an area</option></select>
-          <input type="text" id="landmark" style="margin-top:8px" data-tp="landmarkPh" placeholder="Nearby landmark (optional), e.g. Block C lift lobby">
-          <p><span class="tag" id="loc-status" role="status" data-t="locNone">No location yet</span></p>
+          <label for="landmark" class="hint landmark-label" data-t="landmarkLabel">Nearby landmark (optional)</label>
+          <input type="text" id="landmark" data-tp="landmarkPh" placeholder="Nearby landmark (optional), e.g. Block C lift lobby">
+          <p class="location-status"><span class="tag" id="loc-status" role="status" data-t="locNone">No location yet</span></p>
           <div id="location-preview" hidden>
             <p id="location-label" class="location-label"></p>
             <div id="location-map" class="location-map" role="region" aria-label="Problem location map"></div>
@@ -80,8 +89,12 @@
             <p class="hint" id="location-map-status" role="status"></p>
             <button type="button" class="btn block" id="confirm-location" data-t="confirmLocation">Yes, the problem is here</button>
           </div>
-        </div>
+          <p class="hint location-credit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a><br><span data-t="searchPrivacy">Only your search text is shared with the map provider.</span></p>
+        </section>
 
+        <details class="report-card optional-details" id="optional-details">
+        <summary><span><strong data-t="moreDetails">A few more details</strong><span class="optional-caption" data-t="optionalHint">Optional · category, people affected and contact</span></span><span class="disclosure-icon" aria-hidden="true">+</span></summary>
+        <div class="optional-body">
         <div class="field">
           <span class="label" data-t="type">Type of problem</span>
           <div class="chips" id="categories" role="group"></div>
@@ -104,8 +117,11 @@
           <label for="contact" data-t="contact">Phone for updates (optional)</label>
           <input type="tel" id="contact" inputmode="tel" autocomplete="tel" placeholder="012-345 6789">
         </div>
+        </div>
+        </details>
         <p class="error" id="form-error" role="alert"></p>
         <div class="sticky-cta"><div class="inner">
+          <span class="review-hint" data-t="reviewHint">You can review everything before sending.</span>
           <button type="button" class="btn primary block" id="check" data-t="check">Check my report</button>
         </div></div>
       </section>
@@ -156,6 +172,7 @@
       <p class="error" id="track-error" role="alert"></p>
       <div id="track-result"></div>
     </main>
+    <footer class="app-footer"><span>TownshipFix</span><span data-t="hackathonCaption">Sime Darby Property University Hackathon 2026 project</span></footer>
   </div>
   <script src="/static/vendor/leaflet/leaflet.js"></script>
   <script type="module" src="/static/js/resident.js"></script>

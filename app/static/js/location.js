@@ -79,7 +79,7 @@ export function createLocationPicker({ cfg, t, onChange }) {
     marker.setLatLng([value.lat, value.lng]);
     marker.getElement().setAttribute("aria-label", t("pinLabel"));
     if (accuracyCircle) { map.removeLayer(accuracyCircle); accuracyCircle = null; }
-    if (value.accuracy != null) accuracyCircle = L.circle([value.lat, value.lng], { radius: value.accuracy, weight: 1, color: "#0f5c45", interactive: false }).addTo(map);
+    if (value.accuracy != null) accuracyCircle = L.circle([value.lat, value.lng], { radius: value.accuracy, weight: 1, color: "#d71920", interactive: false }).addTo(map);
     map.setView([value.lat, value.lng], map.getZoom() || 17);
   }
 

@@ -3,15 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0f5c45">
+  <meta name="theme-color" content="#d71920">
   <title>TownshipFix staff</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700;800&display=swap">
+  <link rel="preload" href="/static/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/css/app.css">
 </head>
 <body class="staff">
   <form class="gate" id="gate" hidden>
-    <span class="plate brand">TownshipFix</span>
+    <div class="brand-lockup"><img class="brand-logo" src="/static/assets/sime-darby-property.png" alt="Sime Darby Property" width="88" height="68"><div class="brand-wordmark"><strong>TownshipFix</strong><span>Maintenance team</span></div></div>
     <h1 style="margin-top:16px">Maintenance team sign-in</h1>
     <div class="field">
       <label for="pin">Staff PIN</label>
@@ -24,7 +23,7 @@
 
   <div id="dash" hidden>
     <header class="staff-top">
-      <span class="plate brand">TownshipFix</span>
+      <div class="brand-lockup"><img class="brand-logo" src="/static/assets/sime-darby-property.png" alt="Sime Darby Property" width="88" height="68"><div class="brand-wordmark"><strong>TownshipFix</strong><span>Maintenance team</span></div></div>
       <strong>Maintenance queue</strong>
       <nav aria-label="Filter tickets">
         <button type="button" data-filter="active" aria-pressed="true">Active</button>
