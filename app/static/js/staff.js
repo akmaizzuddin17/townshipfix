@@ -2,7 +2,11 @@ import { api, el, fill, fmtDate, kerb, timeAgo } from "./common.js";
 import { createTicketMap } from "./staff-map.js";
 
 const $ = (id) => document.getElementById(id);
-const S = { pin: null, filter: "active", items: [], selected: null, cfg: null };
+const S = { pin: null, filter: "active", items: [], selected: null, cfg: null,
+  known: null, shownFilter: null, fresh: new Map(), version: null, lastFull: 0, busy: null };
+const POLL_MS = 3000;       // cheap "anything new?" check
+const FULL_MS = 30000;      // full reload anyway, so due times and ageing priority stay current
+const FRESH_MS = 120000;    // how long a new or re-reported ticket stays highlighted
 const ticketMap = createTicketMap({
   container: $("map"), status: $("map-status"), fitButton: $("map-fit"),
   styleButtons: document.querySelectorAll("[data-map-style]"), imageryNote: $("map-imagery-note"),
@@ -83,11 +87,11 @@ function renderQueue() {
   }
   fill(q, ...S.items.map((t) => {
     const d = dueText(t);
-    return el("li", {}, el("button", {
+    return el("li", { class: S.fresh.has(t.code) ? "is-new" : "" }, el("button", {
       type: "button", "aria-current": String(S.selected === t.code), onclick: () => select(t.code),
     },
     kerb(t.priority_band),
-    el("span", { class: "title" }, `${t.code} ${t.category_en}`),
+    el("span", { class: "title" }, `${t.code} ${t.category_en}`, S.fresh.has(t.code) ? el("span", { class: "new-tag" }, S.fresh.get(t.code).label) : null),
     el("span", { class: `due${d.late ? " overdue" : ""}` }, d.text),
     el("span", { class: "sub" }, [t.landmark || "Pinned location", `${t.reporters} reporter${t.reporters > 1 ? "s" : ""}`,
       STATUS[t.status], t.possible_dup_of ? `possible duplicate of ${t.possible_dup_of}` : null].filter(Boolean).join(". "))));
@@ -95,8 +99,8 @@ function renderQueue() {
 }
 
 // ----------------------------------------------------------------- map
-function renderMap() {
-  ticketMap.render(S.items, S.cfg, S.selected, S.filter);
+function renderMap(newCodes = []) {
+  ticketMap.render(S.items, S.cfg, S.selected, S.filter, newCodes);
 }
 
 // --------------------------------------------------------------- detail
@@ -156,6 +160,7 @@ function actionArea(t) {
 
 async function select(code) {
   S.selected = code;
+  S.fresh.delete(code);
   renderQueue(); renderMap();
   ticketMap.showTicket(code);
   let t;
@@ -191,15 +196,76 @@ async function select(code) {
 }
 
 // ------------------------------------------------------------- refresh
+// Works out which tickets are new or got another resident's report since the last look.
+function spotChanges(items) {
+  const now = Date.now();
+  for (const [code, f] of S.fresh) if (now - f.at > FRESH_MS) S.fresh.delete(code);
+  const news = [];
+  if (S.known && S.shownFilter === S.filter) {
+    for (const t of items) {
+      const before = S.known.get(t.code);
+      if (before === undefined) news.push({ t, label: "New", text: `New report ${t.code}: ${t.category_en}, ${t.landmark || "location pinned"}` });
+      else if (t.reporters > before) news.push({ t, label: "+1 report", text: `Another resident reported ${t.code} (${t.reporters} reporters)` });
+    }
+  }
+  S.known = S.known || new Map();
+  for (const t of items) S.known.set(t.code, t.reporters);
+  S.shownFilter = S.filter;
+  for (const n of news) S.fresh.set(n.t.code, { at: now, label: n.label });
+  return news;
+}
+
+function toast(news) {
+  const box = $("toasts");
+  for (const n of news.slice(0, 3)) {
+    const b = el("button", { type: "button", class: `toast${n.t.priority_band === "P0" ? " urgent" : ""}`,
+      onclick: () => { b.remove(); select(n.t.code); } }, n.text, el("span", { class: "toast-open" }, "Open"));
+    box.prepend(b);
+    setTimeout(() => b.remove(), 12000);
+  }
+  while (box.children.length > 3) box.lastChild.remove();
+  if (news.length && document.hidden) document.title = `(${news.length}) TownshipFix staff`;
+}
+
+function setLive(ok, text) {
+  $("live").classList.toggle("is-down", !ok);
+  $("live-text").textContent = text;
+}
+
 async function refresh() {
-  const [m, q, o] = await Promise.all([
-    call("/api/staff/metrics"), call(`/api/staff/tickets?status=${S.filter}`), call("/api/staff/outbox"),
-  ]);
-  renderMetrics(m);
-  S.items = q.items;
-  renderQueue(); renderMap();
-  fill($("outbox"), ...(o.items.length ? o.items.slice(0, 40).map((x) => el("li", {}, x.message,
-    el("small", {}, `${x.channel} to ${x.recipient} at ${fmtDate(x.at)}`))) : [el("li", { class: "hint" }, "No messages yet.")]));
+  // Never run two reloads at once; a caller arriving mid-reload waits for that one.
+  if (S.busy) return S.busy;
+  S.busy = (async () => {
+    const [m, q, o, c] = await Promise.all([
+      call("/api/staff/metrics"), call(`/api/staff/tickets?status=${S.filter}`), call("/api/staff/outbox"),
+      call("/api/staff/changes"),
+    ]);
+    S.version = c.version; S.lastFull = Date.now();
+    renderMetrics(m);
+    S.items = q.items;
+    const news = spotChanges(q.items);
+    renderQueue(); renderMap(news.map((n) => n.t.code));
+    if (news.length) toast(news);
+    // The open ticket got another report: show the new photo and text without a click.
+    if (S.selected && news.some((n) => n.t.code === S.selected)) select(S.selected);
+    fill($("outbox"), ...(o.items.length ? o.items.slice(0, 40).map((x) => el("li", {}, x.message,
+      el("small", {}, `${x.channel} to ${x.recipient} at ${fmtDate(x.at)}`))) : [el("li", { class: "hint" }, "No messages yet.")]));
+    setLive(true, `Live. Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`);
+  })();
+  try { return await S.busy; } finally { S.busy = null; }
+}
+
+// Checks every few seconds; reloads only when something actually changed.
+async function poll() {
+  if (!S.pin || document.hidden) return;
+  try {
+    const c = await call("/api/staff/changes");
+    if (c.version !== S.version || Date.now() - S.lastFull > FULL_MS) await refresh();
+    else setLive(true, $("live-text").textContent.startsWith("Live") ? $("live-text").textContent : "Live");
+  } catch (e) {
+    if (e.status === 401) return;
+    setLive(false, "Can't reach the server. Retrying… Check the app is still running on the laptop.");
+  }
 }
 
 async function boot() {
@@ -226,7 +292,10 @@ async function boot() {
   });
   const saved = sget("tf_pin");
   if (saved) { try { await signIn(saved); } catch (_) { signOut(); } } else { $("gate").hidden = false; $("pin").focus(); }
-  setInterval(() => { if (S.pin && !document.hidden) refresh().catch(() => {}); }, 15000);
+  setInterval(poll, POLL_MS);
+  // Coming back to the tab (or the laptop waking up) catches up straight away.
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { document.title = "TownshipFix staff"; poll(); } });
+  window.addEventListener("focus", poll);
 }
 
 boot().catch((e) => { document.body.prepend(el("p", { class: "error" }, e.message)); });

@@ -103,6 +103,7 @@ AUTO_CLOSE_HOURS = 72        # resident silent this long after a verified fix ->
 # ----------------------------------------------------------- demo township
 # Sample zones so residents without GPS can still pick a location.
 # Coordinates are illustrative sample data, not a real development's layout.
+NEAR_ZONE_M = 400  # a report this close to a township area is labelled "Near <area>"
 ZONES = [
     {"id": "Z1", "name": "Main boulevard",       "lat": 3.07210, "lng": 101.51820},
     {"id": "Z2", "name": "Community park",       "lat": 3.07345, "lng": 101.52010},

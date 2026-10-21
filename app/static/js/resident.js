@@ -280,11 +280,14 @@ function speak(text) {
 }
 
 // ------------------------------------------------------------ check & send
+// Only these location sources carry a real place name; GPS/photo/pin labels just describe the source.
+const PLACE_SOURCES = new Set(["address_search", "zone"]);
 function payload() {
   const p = {
     text: $("text").value.trim(), photo_ref: state.photo?.ref || null, lang: state.lang,
     category: state.category || state.suggested || null, flags: [...state.flags],
-    landmark: [$("landmark").value.trim(), state.loc?.label].filter(Boolean).join("; ") || null, zone: state.zone || null,
+    landmark: [$("landmark").value.trim(), PLACE_SOURCES.has(state.loc?.source) ? state.loc.label : null]
+      .filter(Boolean).join("; ") || null, zone: state.zone || null,
     on_behalf_of: $("behalf-box").open ? $("behalf").value.trim() || null : null,
     contact: $("contact").value.trim() || null,
   };

@@ -4,7 +4,7 @@ import secrets
 from zoneinfo import ZoneInfo
 
 from .. import clock, config, db
-from . import classifier, dedup, notify, priority, text_nlp, verification
+from . import classifier, dedup, geo, notify, priority, text_nlp, verification
 
 
 class Problem(ValueError):
@@ -18,6 +18,18 @@ class Problem(ValueError):
 def log(ticket_id, actor, kind, **detail):
     db.ex("INSERT INTO events (ticket_id, at, actor, kind, detail) VALUES (?,?,?,?,?)",
           (ticket_id, clock.iso(clock.now()), actor, kind, json.dumps(detail)))
+
+
+def place_name(landmark, lat, lng):
+    """What staff and SMS see as 'where'. A typed landmark wins; otherwise the nearest
+    township area (if close) or the coordinates, never a blank or a vague 'map pin'."""
+    landmark = (landmark or "").strip()
+    if landmark:
+        return landmark[:300]
+    near = min(config.ZONES, key=lambda z: geo.distance_m(lat, lng, z["lat"], z["lng"]), default=None)
+    if near and geo.distance_m(lat, lng, near["lat"], near["lng"]) <= config.NEAR_ZONE_M:
+        return f"Near {near['name']}"
+    return f"GPS {lat:.5f}, {lng:.5f}"
 
 
 def get(code):
@@ -81,6 +93,7 @@ def _create_report(*, text, lat, lng, location_source, landmark, category, flags
                   contact=None, client_duration_ms=None, location_accuracy_m=None):
     if lat is None or lng is None:
         raise Problem("Location is needed: allow GPS, use a photo with location, or pick an area.")
+    landmark = place_name(landmark, lat, lng)
     if not (text or "").strip() and not photo:
         raise Problem("Please add a photo or describe the problem.")
     if lang not in ("en", "ms"):

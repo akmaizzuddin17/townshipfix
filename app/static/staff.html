@@ -26,6 +26,7 @@
     <header class="staff-top">
       <div class="brand-lockup"><img class="brand-logo" src="/static/assets/sime-darby-property.png" alt="Sime Darby Property" width="88" height="68"><div class="brand-wordmark"><strong>TownshipFix</strong><span>Maintenance team</span></div></div>
       <strong>Maintenance queue</strong>
+      <p class="live" id="live" role="status"><span class="live-dot" aria-hidden="true"></span><span id="live-text">Connecting…</span></p>
       <nav aria-label="Filter tickets">
         <button type="button" data-filter="active" aria-pressed="true">Active</button>
         <button type="button" data-filter="awaiting_confirmation" aria-pressed="false">Awaiting resident</button>
@@ -33,6 +34,7 @@
         <button type="button" data-filter="all" aria-pressed="false">All</button>
       </nav>
     </header>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
     <section class="metrics" id="metrics" aria-label="Key measures"></section>
     <div class="board">
       <div class="side">

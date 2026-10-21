@@ -290,5 +290,43 @@ class TestSafetyAndGuards(AppTestCase):
         staff.close()
 
 
+class TestLiveDashboard(AppTestCase):
+    PIN = {"X-Staff-Pin": "1234"}
+
+    def version(self):
+        r = self.c.get("/api/staff/changes", headers=self.PIN)
+        self.assertEqual(r.status_code, 200)
+        return r.json["version"]
+
+    def test_changes_needs_pin(self):
+        self.assertEqual(self.c.get("/api/staff/changes").status_code, 401)
+
+    def test_version_moves_on_new_report_duplicate_and_staff_action(self):
+        v0 = self.version()
+        self.assertEqual(v0, self.version())  # polling alone changes nothing
+        a = self.report(LAMP, 1, "lampu rosak", "streetlight")
+        v1 = self.version()
+        self.assertNotEqual(v0, v1)
+        self.report(LAMP, 2, "streetlight broken", "streetlight")  # merges into the same ticket
+        v2 = self.version()
+        self.assertNotEqual(v1, v2)
+        self.c.post(f"/api/staff/tickets/{a['ticket']['code']}/assign", json={"assignee": "Ali"}, headers=self.PIN)
+        self.assertNotEqual(v2, self.version())
+
+    def test_phone_gps_far_from_township_gets_a_readable_place(self):
+        body = {"text": "Lampu jalan rosak", "lat": 3.17450, "lng": 101.72360, "location_source": "device_gps", "lang": "ms"}
+        r = self.c.post("/api/reports", json=body).json
+        t = self.c.get(f"/api/staff/tickets/{r['ticket']['code']}", headers=self.PIN).json
+        self.assertEqual(t["landmark"], "GPS 3.17450, 101.72360")
+        listed = self.c.get("/api/staff/tickets?status=active", headers=self.PIN).json["items"]
+        self.assertIn(r["ticket"]["code"], [x["code"] for x in listed])
+
+    def test_phone_gps_near_township_area_is_named(self):
+        body = {"text": "tong sampah penuh", "lat": 3.07215, "lng": 101.51830, "location_source": "device_gps"}
+        r = self.c.post("/api/reports", json=body).json
+        t = self.c.get(f"/api/staff/tickets/{r['ticket']['code']}", headers=self.PIN).json
+        self.assertEqual(t["landmark"], "Near Main boulevard")
+
+
 if __name__ == "__main__":
     unittest.main()

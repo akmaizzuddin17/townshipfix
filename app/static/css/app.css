@@ -288,3 +288,19 @@ input[type=file]::file-selector-button { border: 1px solid var(--line); backgrou
   .gate { margin: 6vh 16px; padding: 24px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; } }
+
+/* Live updates on the staff dashboard */
+.live { display: inline-flex; align-items: center; gap: 7px; margin: 0; font-size: 12px; color: var(--muted); }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px #21734c22; }
+.live.is-down { color: var(--danger); }
+.live.is-down .live-dot { background: var(--danger); box-shadow: 0 0 0 3px #bb182022; }
+.queue li.is-new > button { background: #fff6e8; box-shadow: inset 4px 0 0 var(--kerb); }
+.new-tag { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; background: var(--kerb); color: var(--ink); font-size: 10px; font-weight: 700; vertical-align: 1px; }
+.toasts { position: fixed; right: 20px; bottom: 20px; z-index: 1000; display: grid; gap: 8px; max-width: min(380px, calc(100vw - 32px)); }
+.toast { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; padding: 13px 15px; border: 1px solid var(--line); border-left: 4px solid var(--kerb); border-radius: 10px; background: #fff; color: var(--ink); font-size: 13px; box-shadow: 0 6px 20px #202b3b26; cursor: pointer; }
+.toast.urgent { border-left-color: var(--danger); }
+.toast-open { color: var(--sign); font-weight: 700; white-space: nowrap; }
+@media (prefers-reduced-motion: no-preference) {
+  .toast { animation: toast-in .25s ease-out; }
+  @keyframes toast-in { from { transform: translateY(8px); opacity: 0; } }
+}

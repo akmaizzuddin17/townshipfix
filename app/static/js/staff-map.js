@@ -80,7 +80,7 @@ export function createTicketMap({ container, status, fitButton, styleButtons, im
 
   return {
     showTicket(code) { markers.get(code)?.marker.openPopup(); },
-    render(items, cfg, selected, filter) {
+    render(items, cfg, selected, filter, newCodes = []) {
       const L = window.L;
       if (!L) {
         status.textContent = "Map unavailable. Select a ticket from the queue to view its details and photos.";
@@ -156,6 +156,12 @@ export function createTicketMap({ container, status, fitButton, styleButtons, im
         if (bounds.isValid()) fit();
         else map.setView([3.0721, 101.5182], 14);
         lastFilter = filter;
+      } else if (newCodes.length) {
+        // A new report landed outside the part of the map on screen (e.g. a phone's real GPS
+        // away from the sample township): widen the view so the new pin is visible.
+        const view = map.getBounds();
+        const offscreen = points.some((t) => newCodes.includes(t.code) && !view.contains([t.lat, t.lng]));
+        if (offscreen && bounds.isValid()) fit();
       }
       describe();
     },

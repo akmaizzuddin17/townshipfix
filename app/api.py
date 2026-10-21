@@ -282,6 +282,16 @@ def staff_metrics():
     return jsonify(metrics.compute())
 
 
+@bp.get("/api/staff/changes")
+def staff_changes():
+    """Cheap 'has anything changed?' check the dashboard polls every few seconds.
+    Every report, merge, assignment, completion and auto-close writes an event row."""
+    _staff()  # read-only on purpose: the 30 s full refresh runs sweep() for ageing and auto-close
+    r = db.q1("SELECT (SELECT COALESCE(MAX(id), 0) FROM events) AS e, (SELECT COALESCE(MAX(id), 0) FROM outbox) AS o, "
+              "(SELECT COUNT(*) FROM tickets) AS t")
+    return jsonify(version=f"{db._generation}.{r['e']}.{r['o']}.{r['t']}")
+
+
 @bp.get("/api/staff/outbox")
 def staff_outbox():
     _staff()
