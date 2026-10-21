@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#d71920">
   <title>TownshipFix staff</title>
   <link rel="preload" href="/static/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="/static/css/app.css">
 </head>
 <body class="staff">
@@ -40,12 +41,29 @@
           <ul class="queue" id="queue"></ul>
         </section>
         <section class="panel map" aria-labelledby="map-h">
-          <h2 class="panel-title" id="map-h">Township map</h2>
-          <div id="map"></div>
+          <div class="map-heading">
+            <h2 class="panel-title" id="map-h">Township map</h2>
+            <button type="button" class="map-fit" id="map-fit">Show all tickets</button>
+          </div>
+          <div class="map-styles" role="group" aria-label="Map imagery">
+            <button type="button" data-map-style="streets" aria-pressed="true">Streets</button>
+            <button type="button" data-map-style="satellite" aria-pressed="false">Satellite</button>
+          </div>
+          <div id="map" role="region" aria-label="Ticket locations" aria-describedby="map-status map-gesture-hint"></div>
+          <div class="map-legend" aria-label="Ticket priorities">
+            <span><i class="map-dot P0"></i>P0 Emergency</span>
+            <span><i class="map-dot P1"></i>P1</span>
+            <span><i class="map-dot P2"></i>P2</span>
+            <span><i class="map-dot P3"></i>P3</span>
+          </div>
+          <p class="hint map-status" id="map-status" role="status"></p>
+          <p class="hint map-note" id="map-gesture-hint">Pinch or scroll to zoom. Drag to move.</p>
+          <p class="hint map-note" id="map-imagery-note" hidden>Satellite imagery is not live; capture dates vary by location.</p>
+          <p class="hint map-note">Sample township zones are illustrative.</p>
         </section>
       </div>
       <div class="side">
-        <section class="panel detail" id="detail" aria-live="polite">
+        <section class="panel detail" id="detail" aria-live="polite" tabindex="-1">
           <p class="empty">Select a ticket to see photos, why it is ranked there, and what to do next.</p>
         </section>
         <section class="panel" aria-labelledby="out-h">
@@ -59,6 +77,7 @@
       </div>
     </div>
   </div>
+  <script src="/static/vendor/leaflet/leaflet.js"></script>
   <script type="module" src="/static/js/staff.js"></script>
 </body>
 </html>

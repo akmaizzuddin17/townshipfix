@@ -270,11 +270,24 @@ class TestSafetyAndGuards(AppTestCase):
         self.assertIsNone(vision.exif_info(stored)["lat"])
 
     def test_pages_and_config_load(self):
-        self.assertEqual(self.c.get("/").status_code, 200)
-        self.assertEqual(self.c.get("/staff").status_code, 200)
+        resident = self.c.get("/")
+        staff = self.c.get("/staff")
+        self.assertEqual(resident.status_code, 200)
+        self.assertEqual(staff.status_code, 200)
+        self.assertEqual(resident.headers["Referrer-Policy"], "no-referrer")
+        self.assertEqual(staff.headers["Referrer-Policy"], "strict-origin-when-cross-origin")
         cfg = self.c.get("/api/config").json
         self.assertIn("streetlight", cfg["categories"])
         self.assertEqual(cfg["vision"], "keywords")
+        self.assertEqual(cfg["map"]["tile_url"], config.MAP_TILE_URL)
+        self.assertEqual(cfg["map"]["attribution"], config.MAP_ATTRIBUTION_HTML)
+        # resident location picker (main branch) still gets its plain-text keys
+        self.assertEqual(cfg["map_tiles"], config.MAP_TILE_URL)
+        self.assertEqual(cfg["map_attribution"], config.MAP_ATTRIBUTION)
+        self.assertEqual(cfg["map"]["satellite_tile_url"], config.MAP_SATELLITE_TILE_URL)
+        self.assertEqual(cfg["map"]["satellite_attribution"], config.MAP_SATELLITE_ATTRIBUTION)
+        resident.close()
+        staff.close()
 
 
 if __name__ == "__main__":

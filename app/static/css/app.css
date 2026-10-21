@@ -209,7 +209,33 @@ details.more summary { font-weight: 500; font-size: 13px; cursor: pointer; min-h
 .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin: 12px 0; }
 .actions .field { margin: 0; flex: 1 1 200px; }
 .side { display: grid; gap: 20px; min-width: 0; }
-.map svg { width: 100%; height: auto; display: block; }
+.map-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding-right: 12px; }
+.map-heading .panel-title { border: 0; }
+.map-fit { min-height: 44px; border: 0; background: none; color: var(--sign); font-size: 13px; font-weight: 650; cursor: pointer; }
+.map-styles { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.map-styles button { min-height: 40px; flex: 1; padding: 6px 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); font-size: 13px; font-weight: 600; cursor: pointer; }
+.map-styles button[aria-pressed="true"] { background: var(--sign); border-color: var(--sign); color: #fff; }
+.map-styles button:disabled { cursor: not-allowed; opacity: .5; }
+#map { height: 360px; width: 100%; z-index: 0; background: #eef0f3; font-family: var(--font); }
+#map .leaflet-control-zoom a { width: 44px; height: 44px; line-height: 44px; }
+#map .leaflet-control-attribution { font-size: 11px; background: rgba(255,255,255,.95); }
+.ticket-marker { display: grid; place-items: center; background: none; border: 0; }
+.ticket-marker span { width: 32px; height: 32px; display: grid; place-items: center; border: 2px solid #fff; border-radius: 50%; font: 700 12px/1 var(--font); box-shadow: 0 2px 6px #202b3b55; }
+.ticket-marker.is-selected span { outline: 3px solid var(--sign); outline-offset: 2px; }
+.ticket-marker:focus-visible { outline: 3px solid var(--sign); border-radius: 50%; }
+.ticket-marker.P0 span, .map-dot.P0 { background: #bb1820; color: #fff; }
+.ticket-marker.P1 span, .map-dot.P1 { background: #ef6c2c; color: #fff; }
+.ticket-marker.P2 span, .map-dot.P2 { background: #d99a17; color: #202b3b; }
+.ticket-marker.P3 span, .map-dot.P3 { background: #9aa4b1; color: #202b3b; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 10px 14px 0; font-size: 12px; }
+.map-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.map-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; }
+.map-status { margin: 8px 14px; }
+.map-note { margin: 0 14px 12px; font-size: 12px; }
+.ticket-popup { min-width: 170px; color: var(--ink); }
+.ticket-popup p { margin: 6px 0; }
+.ticket-popup img { width: 100%; height: 95px; object-fit: cover; border-radius: 6px; margin: 8px 0; }
+.ticket-popup .btn { padding: 7px 10px; font-size: 13px; width: 100%; }
 .log { list-style: none; margin: 0; padding: 0 18px; max-height: 260px; overflow: auto; font-size: 12px; }
 .log li { padding: 10px 0; border-bottom: 1px solid var(--line); }
 .log small { color: var(--muted); display: block; font-size: 10px; }

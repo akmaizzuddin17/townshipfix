@@ -45,7 +45,7 @@ export function createLocationPicker({ cfg, t, onChange }) {
     if (!window.L) { $("location-map-status").textContent = t("mapUnavailable"); return; }
     if (!map) {
       map = L.map("location-map", { center: [value.lat, value.lng], zoom: 17, scrollWheelZoom: false });
-      const tiles = L.tileLayer(cfg.map_tiles, { maxZoom: 19 });
+      const tiles = L.tileLayer(cfg.map_tiles, { maxZoom: 19, referrerPolicy: "strict-origin-when-cross-origin" });
       // Attribution is text, including when an operator configures another provider.
       const credit = L.control({ position: "bottomright" });
       credit.onAdd = () => {

@@ -93,7 +93,10 @@ def get_config():
     return jsonify(categories=config.CATEGORIES, flags=config.IMPACT_FLAGS, zones=config.ZONES,
                    teams=config.TEAMS, vision=tickets.classifier._provider(),
                    privacy_detectors=privacy.detectors_available(),
-                   map_tiles=config.MAP_TILE_URL, map_attribution=config.MAP_ATTRIBUTION)
+                   map_tiles=config.MAP_TILE_URL, map_attribution=config.MAP_ATTRIBUTION,
+                   map={"tile_url": config.MAP_TILE_URL, "attribution": config.MAP_ATTRIBUTION_HTML,
+                        "satellite_tile_url": config.MAP_SATELLITE_TILE_URL,
+                        "satellite_attribution": config.MAP_SATELLITE_ATTRIBUTION})
 
 
 @bp.get("/api/locations/search")
