@@ -28,7 +28,7 @@ const CLOSE = {
   supervisor_override: "Supervisor override",
 };
 const LOC = { photo_gps: "location from photo", device_gps: "phone GPS", zone: "area picked from list",
-  address_search: "address search", map_pin: "pin placed manually" };
+  address_search: "address search", map_pin: "pin placed manually", telegram_pin: "pin shared in Telegram" };
 const EVENT = {
   created: "Ticket created", report_received: "Resident report", report_merged: "Duplicate report added",
   assigned: "Assigned", work_started: "Work started", completion_accepted: "Repair evidence accepted",
@@ -186,7 +186,7 @@ async function select(code) {
     el("h2", {}, `What residents said (${t.reports.length})`),
     el("ul", { class: "reports" }, t.reports.map((r) => el("li", {},
       el("div", {}, r.text ? `“${r.text}”` : "(photo only)"),
-      el("small", { class: "hint" }, [r.lang === "ms" ? "Malay" : "English", LOC[r.location_source],
+      el("small", { class: "hint" }, [r.source_channel === "telegram" ? "Telegram" : "Web", r.lang === "ms" ? "Malay" : "English", LOC[r.location_source],
         r.location_accuracy_m != null ? `GPS accuracy approximately ${Math.round(r.location_accuracy_m)} m` : null,
         r.on_behalf_of ? `for ${r.on_behalf_of}` : null, r.merge_explanation, timeAgo(r.created_at)].filter(Boolean).join(". "))))),
     el("h2", {}, "Audit trail"),

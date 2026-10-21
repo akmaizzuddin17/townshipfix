@@ -90,7 +90,7 @@ def create_report(**kw):
 
 def _create_report(*, text, lat, lng, location_source, landmark, category, flags, lang,
                   photo=None, photo_bytes=None, media_type="image/jpeg", on_behalf_of=None,
-                  contact=None, client_duration_ms=None, location_accuracy_m=None):
+                  contact=None, client_duration_ms=None, location_accuracy_m=None, source_channel="web"):
     if lat is None or lng is None:
         raise Problem("Location is needed: allow GPS, use a photo with location, or pick an area.")
     landmark = place_name(landmark, lat, lng)
@@ -138,11 +138,11 @@ def _create_report(*, text, lat, lng, location_source, landmark, category, flags
 
     db.ex("""INSERT INTO reports (ticket_id, token, text, lang, category_chosen, category_suggested, lat, lng,
              location_source, landmark, photo, privacy, flags, on_behalf_of, contact, client_duration_ms,
-             merged, merge_explanation, created_at, location_accuracy_m) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+             merged, merge_explanation, created_at, location_accuracy_m, source_channel) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
           (t["id"], token, text, lang, category, a["suggestion"]["category"], lat, lng, location_source,
            landmark, photo["name"] if photo else None, json.dumps(photo["privacy"] if photo else {}),
            json.dumps(all_flags), on_behalf_of, contact, client_duration_ms, int(merged), explanation, now,
-           location_accuracy_m))
+           location_accuracy_m, source_channel))
     log(t["id"], "resident", "report_merged" if merged else "report_received",
         on_behalf=bool(on_behalf_of), explanation=explanation)
 
@@ -286,7 +286,7 @@ def staff_view(t):
     d.update({k: t[k] for k in ("flags", "priority_reasons", "urgent_reasons", "assigned_to", "possible_dup_of",
                                 "verification", "reopen_count", "updated_at", "completed_at", "closed_at")})
     d["team_id"] = t["team"]
-    d["reports"] = db.q("""SELECT id, text, lang, category_chosen, category_suggested, location_source, location_accuracy_m, landmark,
+    d["reports"] = db.q("""SELECT id, text, lang, category_chosen, category_suggested, source_channel, location_source, location_accuracy_m, landmark,
                            photo, privacy, flags, on_behalf_of, merged, merge_explanation, created_at
                            FROM reports WHERE ticket_id=? ORDER BY id""", (t["id"],))
     d["events"] = db.q("SELECT at, actor, kind, detail FROM events WHERE ticket_id=? ORDER BY id", (t["id"],))

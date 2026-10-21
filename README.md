@@ -65,6 +65,67 @@ python scripts/load_demo.py demo_photos/_synthetic --complete        # 15 report
 python scripts/load_demo.py --complete                               # your real photos in demo_photos/
 ```
 
+### Report through Telegram (free prototype)
+
+The optional Telegram worker accepts **private chats**, reads GPS from original
+photo files when present, and uses the existing Malay/English keyword rules.
+It does **not** call a paid AI API. It creates ordinary dashboard tickets with
+the same prioritisation, photo privacy processing and duplicate grouping as web
+reports. Staff see **Telegram** next to the resident's explanation.
+
+1. Create a bot with Telegram's official [@BotFather](https://t.me/BotFather), using `/newbot`.
+2. Keep the dashboard running. Open a second terminal in this repository, activate
+   the same Python environment and run:
+
+   ```bash
+   python -m app.telegram
+   ```
+
+   Paste the bot token into the **hidden prompt**. It is not displayed or saved.
+   Do not paste it into chat, commit it, or put it in a command-line argument.
+   For an unattended worker, set `TOWNSHIPFIX_TELEGRAM_BOT_TOKEN` securely in its
+   environment instead. `python -m app.telegram --check` checks the connection
+   without starting the polling loop.
+
+3. Open the bot's Telegram username, press Start, and send an original JPG/PNG as
+   a **File/document**, with a caption explaining the issue. A normal shared photo
+   also works, but may arrive without location metadata. Photo limit: 15 MB.
+4. If GPS is missing, share the problem's pin, use `/place <address>` and then
+   `/pick <number>`, or `/area`. The current configured areas are illustrative demo
+   coordinates; replace `config.ZONES` before using area selection in a real township.
+5. Review the suggested category and location. Correct the pin if needed or use
+   `/category`, then `/confirm`. The ticket appears in the staff dashboard on its
+   next automatic refresh. `/status` checks your latest ticket; `/cancel` drops
+   the current draft. Explanations can be entered in English or Malay; bot prompts
+   are currently English. Photos without an explanation prompt for one.
+
+Both processes must use the **same data folder** (`TOWNSHIPFIX_DATA` if configured).
+The worker uses [long polling](https://core.telegram.org/bots/api#getupdates), so
+it only needs outbound internet access: no public URL, HTTPS tunnel or hosting
+subscription is needed. Keep the computer and worker running to receive reports.
+Only one worker should poll a bot; an existing webhook must be removed separately
+or a different bot used. This worker never changes another integration's webhook.
+
+Drafts and replies survive worker restarts. Drafts expire after 24 hours. Replayed
+updates do not create extra reports; queued replies retry after temporary network
+failures. A reply may be delivered twice if Telegram accepted it but the network
+failed before acknowledging it. `/status` is supported; proactive repair-status
+messages are still simulated in the dashboard outbox. WhatsApp and email intake
+are not implemented in this prototype.
+
+For a private pilot, `TOWNSHIPFIX_TELEGRAM_ALLOWED_CHATS` can contain a comma-separated
+list of numeric private-chat IDs; without it, any user who finds the bot can submit
+reports. Group messages, bots, voice notes and non-image documents are ignored or
+rejected. Original image bytes are processed locally, GPS is extracted before the
+stored image is stripped of metadata, and chat IDs/drafts are kept in local SQLite.
+Only an explicit `/place` query is sent to the configured address search provider.
+Telegram transports the messages and files; the application sends its replies
+back to that same private chat. Stop the worker before clearing demo data.
+
+```bash
+python -m unittest tests.test_telegram -v  # offline integration tests; no bot token needed
+```
+
 ## The 2-minute demo
 
 ### Choose and confirm the problem location

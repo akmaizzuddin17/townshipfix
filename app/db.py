@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS reports (
     lat REAL, lng REAL,
     location_source TEXT,              -- photo_gps, device_gps, zone, address_search, map_pin
     location_accuracy_m REAL,
+    source_channel TEXT NOT NULL DEFAULT 'web',
     landmark TEXT,
     photo TEXT,
     privacy TEXT DEFAULT '{}',
@@ -77,6 +78,29 @@ CREATE TABLE IF NOT EXISTS outbox (
 );
 CREATE INDEX IF NOT EXISTS idx_reports_ticket ON reports(ticket_id);
 CREATE INDEX IF NOT EXISTS idx_events_ticket ON events(ticket_id);
+CREATE TABLE IF NOT EXISTS telegram_chats (
+    bot_id INTEGER NOT NULL,
+    chat_id INTEGER NOT NULL,
+    draft TEXT NOT NULL DEFAULT '{}',
+    updated_at TEXT NOT NULL,
+    last_ticket_code TEXT,
+    PRIMARY KEY (bot_id, chat_id)
+);
+CREATE TABLE IF NOT EXISTS telegram_updates (
+    bot_id INTEGER NOT NULL,
+    update_id INTEGER NOT NULL,
+    PRIMARY KEY (bot_id, update_id)
+);
+CREATE TABLE IF NOT EXISTS telegram_replies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bot_id INTEGER NOT NULL,
+    payload TEXT NOT NULL,
+    sent INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS telegram_workers (
+    bot_id INTEGER PRIMARY KEY,
+    next_offset INTEGER NOT NULL DEFAULT 0
+);
 """
 
 
@@ -94,6 +118,8 @@ def connect():
         columns = {r[1] for r in conn.execute("PRAGMA table_info(reports)")}
         if "location_accuracy_m" not in columns:
             conn.execute("ALTER TABLE reports ADD COLUMN location_accuracy_m REAL")
+        if "source_channel" not in columns:
+            conn.execute("ALTER TABLE reports ADD COLUMN source_channel TEXT NOT NULL DEFAULT 'web'")
         _local.conn, _local.path, _local.gen = conn, str(config.DB_PATH), _generation
     return conn
 
