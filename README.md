@@ -15,6 +15,8 @@ Residents snap a photo or simply *say* what is broken, in Malay or English. Town
 
 ## Run it (5 minutes)
 
+**On Windows:** double-click **`Start TownshipFix.bat`**. It installs what's needed, starts the app over HTTPS and opens the resident app and staff dashboard (PIN `1234`). Run `git pull` first to get updates.
+
 Needs Python 3.10 or newer.
 
 ```bash
